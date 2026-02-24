@@ -11,7 +11,7 @@ body {
   min-height: 100vh;
   display: flex;
   justify-content: center;
-  padding: 2rem 1rem;
+  padding: 1rem 0.5rem;
 }
 
 .container {
@@ -66,8 +66,8 @@ header button:hover {
 
 .day-cell {
   background: white;
-  min-height: 100px;
-  padding: 0.5rem;
+  min-height: 80px;
+  padding: 0.25rem;
   cursor: pointer;
 }
 
@@ -107,6 +107,13 @@ header button:hover {
   word-break: break-word;
 }
 
+.event span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
 .event .delete-btn {
   background: none;
   border: none;
@@ -120,4 +127,49 @@ header button:hover {
 
 .event .delete-btn:hover {
   opacity: 1;
+}
+
+@media (max-width: 500px) {
+  body {
+    padding: 0.5rem 0.25rem;
+  }
+
+  header {
+    margin-bottom: 0.75rem;
+  }
+
+  header h1 {
+    font-size: 1.15rem;
+  }
+
+  header button {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .day-labels {
+    font-size: 0.7rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .day-cell {
+    min-height: 60px;
+    padding: 2px;
+  }
+
+  .day-number {
+    font-size: 0.7rem;
+    margin-bottom: 2px;
+  }
+
+  .event {
+    font-size: 0.6rem;
+    padding: 1px 3px;
+    border-radius: 3px;
+  }
+
+  .event .delete-btn {
+    font-size: 0.7rem;
+    padding: 0 0 0 2px;
+  }
 }
