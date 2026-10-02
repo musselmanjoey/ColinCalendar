@@ -6,20 +6,20 @@ const app = express();
 app.use(express.json());
 
 // --- Storage ---
-// Uses Upstash Redis in production (env vars injected by Vercel)
+// Uses Upstash Redis in production. Vercel's Upstash integration injects
+// KV_REST_API_URL/TOKEN; a direct Upstash setup uses UPSTASH_REDIS_REST_URL/TOKEN.
 // Falls back to in-memory store for local dev
 
 let redis;
 const memoryStore = {};
 
 function getRedis() {
-  if (process.env.UPSTASH_REDIS_REST_URL) {
+  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+  if (url && token) {
     if (!redis) {
       const { Redis } = require('@upstash/redis');
-      redis = new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN,
-      });
+      redis = new Redis({ url, token });
     }
     return redis;
   }
