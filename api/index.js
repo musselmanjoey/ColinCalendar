@@ -96,6 +96,97 @@ app.delete('/api/events/:id', async (req, res) => {
   }
 });
 
+// --- ICS feed (read by the wall display) ---
+
+function icsEscape(text) {
+  return String(text)
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,')
+    .replace(/\r?\n/g, '\\n');
+}
+
+// RFC 5545: lines longer than 75 octets continue on a line starting with a space
+function icsFold(line) {
+  const parts = [];
+  let rest = line;
+  while (Buffer.byteLength(rest) > 75) {
+    let cut = 75;
+    while (Buffer.byteLength(rest.slice(0, cut)) > 75) cut--;
+    parts.push(rest.slice(0, cut));
+    rest = rest.slice(cut);
+  }
+  parts.push(rest);
+  return parts.join('\r\n ');
+}
+
+function icsDate(isoDate) {
+  return isoDate.replace(/-/g, '');
+}
+
+function nextDay(isoDate) {
+  const d = new Date(`${isoDate}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
+function monthKeys(fromOffset, toOffset) {
+  const now = new Date();
+  const keys = [];
+  for (let i = fromOffset; i <= toOffset; i++) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + i, 1));
+    keys.push(`events:${d.toISOString().slice(0, 7)}`);
+  }
+  return keys;
+}
+
+function tokenMatches(given, expected) {
+  const a = Buffer.from(String(given || ''));
+  const b = Buffer.from(expected);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+// GET /api/calendar.ics?token=...
+// All-day events from 3 months back to 12 months ahead. If CALENDAR_FEED_TOKEN
+// is set, the token query param must match it.
+app.get('/api/calendar.ics', async (req, res) => {
+  try {
+    const expected = process.env.CALENDAR_FEED_TOKEN;
+    if (expected && !tokenMatches(req.query.token, expected)) {
+      return res.status(404).send('Not found');
+    }
+
+    const months = await Promise.all(monthKeys(-3, 12).map(getEvents));
+    const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+    const lines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//ColinCalendar//Shared//EN',
+      'CALSCALE:GREGORIAN',
+      'X-WR-CALNAME:Shared',
+    ];
+    for (const event of months.flat()) {
+      lines.push(
+        'BEGIN:VEVENT',
+        `UID:${event.id}@colincalendar`,
+        `DTSTAMP:${stamp}`,
+        `DTSTART;VALUE=DATE:${icsDate(event.date)}`,
+        `DTEND;VALUE=DATE:${icsDate(nextDay(event.date))}`,
+        `SUMMARY:${icsEscape(event.title)}`,
+        'END:VEVENT',
+      );
+    }
+    lines.push('END:VCALENDAR');
+
+    res.set('Content-Type', 'text/calendar; charset=utf-8');
+    res.set('Cache-Control', 'no-store');
+    res.send(lines.map(icsFold).join('\r\n') + '\r\n');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Failed to build calendar');
+  }
+});
+
 // Local dev: serve static files and start server
 if (require.main === module) {
   app.use(express.static(path.join(__dirname, '..', 'public')));
