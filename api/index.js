@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const crypto = require('crypto');
+const fs = require('fs');
 
 const app = express();
 app.use(express.json());
@@ -8,10 +9,22 @@ app.use(express.json());
 // --- Storage ---
 // Uses Upstash Redis in production. Vercel's Upstash integration injects
 // KV_REST_API_URL/TOKEN; a direct Upstash setup uses UPSTASH_REDIS_REST_URL/TOKEN.
-// Falls back to in-memory store for local dev
+// Otherwise, if DATA_FILE is set (self-hosted on guist), events persist to that
+// JSON file. With neither, an in-memory store is used (local dev).
 
 let redis;
-const memoryStore = {};
+const DATA_FILE = process.env.DATA_FILE;
+let memoryStore = {};
+if (DATA_FILE && fs.existsSync(DATA_FILE)) {
+  memoryStore = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+}
+
+function saveDataFile() {
+  // Write to a temp file and rename, so a crash mid-write can't corrupt the data
+  const tmp = `${DATA_FILE}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(memoryStore, null, 2));
+  fs.renameSync(tmp, DATA_FILE);
+}
 
 function getRedis() {
   const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
@@ -38,6 +51,7 @@ async function setEvents(key, events) {
     await r.set(key, events);
   } else {
     memoryStore[key] = events;
+    if (DATA_FILE) saveDataFile();
   }
 }
 
@@ -190,7 +204,8 @@ app.get('/api/calendar.ics', async (req, res) => {
 // Local dev: serve static files and start server
 if (require.main === module) {
   app.use(express.static(path.join(__dirname, '..', 'public')));
-  app.listen(3000, () => console.log('Running at http://localhost:3000'));
+  const port = process.env.PORT || 3000;
+  app.listen(port, () => console.log(`Running at http://localhost:${port}`));
 }
 
 module.exports = app;

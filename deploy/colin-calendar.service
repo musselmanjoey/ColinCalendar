@@ -1,0 +1,17 @@
+[Unit]
+Description=ColinCalendar - shared calendar web app + ICS feed for the wall display
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/musselmanjoey/colin-calendar
+ExecStart=/usr/bin/node /home/musselmanjoey/colin-calendar/api/index.js
+Restart=on-failure
+RestartSec=5
+# PORT, DATA_FILE, CALENDAR_FEED_TOKEN (mode 600, not in git)
+EnvironmentFile=/home/musselmanjoey/colin-calendar/.env
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
