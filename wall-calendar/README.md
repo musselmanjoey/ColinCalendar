@@ -15,8 +15,10 @@ the Pi pulls them in as ICS feeds. Design notes and open questions are in the
 | `tv.sh` | HDMI-CEC control, installed as `wallcal-tv {init,on,off,status}`. |
 | `setup.sh` | One-time Pi install. Safe to re-run. |
 
-The shared calendar comes from the web app's feed at `/api/calendar.ics`. If
-`CALENDAR_FEED_TOKEN` is set in Vercel, the feed needs `?token=<that value>`.
+The shared calendar comes from the ColinCalendar web app, self-hosted on guist at
+http://192.168.1.177:3020. Its feed is `/api/calendar.ics?token=<CALENDAR_FEED_TOKEN>`;
+the token is in `~/colin-calendar/.env` on guist. Deploy app changes with
+`bash deploy/deploy-guist.sh` from the repo root.
 
 ## Getting feed URLs
 
