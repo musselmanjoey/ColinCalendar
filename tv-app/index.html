@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Wall Calendar</title>
+  <!-- Samsung TV web APIs (provided by the TV); used to keep the screensaver off -->
+  <script src="$WEBAPIS/webapis/webapis.js"></script>
+  <style>
+    html, body { margin: 0; height: 100%; background: #e4d2b8; overflow: hidden; }
+    iframe { border: 0; width: 100%; height: 100%; display: block; }
+    #offline {
+      display: none; position: absolute; top: 45%; width: 100%; text-align: center;
+      font: 32px Georgia, serif; color: #8b5a2b;
+    }
+  </style>
+</head>
+<body>
+  <iframe id="wall" src="http://192.168.1.177:3020/wall"></iframe>
+  <div id="offline">Waiting for the calendar server&hellip;</div>
+  <script>
+    // ES5 on purpose (older TV browser engine)
+    (function () {
+      var WALL_URL = 'http://192.168.1.177:3020/wall';
+      var frame = document.getElementById('wall');
+
+      try {
+        webapis.appcommon.setScreenSaver(webapis.appcommon.AppCommonScreenSaverState.SCREEN_SAVER_OFF);
+      } catch (e) { /* not on a TV */ }
+
+      // If guist was unreachable when the app opened, keep retrying
+      function check() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', WALL_URL.replace('/wall', '/api/wall/data'), true);
+        xhr.timeout = 8000;
+        xhr.onload = function () {
+          document.getElementById('offline').style.display = 'none';
+          if (frame.getAttribute('data-failed')) {
+            frame.removeAttribute('data-failed');
+            frame.src = WALL_URL;
+          }
+        };
+        xhr.onerror = xhr.ontimeout = function () {
+          document.getElementById('offline').style.display = 'block';
+          frame.setAttribute('data-failed', '1');
+        };
+        xhr.send();
+      }
+      setInterval(check, 60 * 1000);
+      check();
+
+      // Back/Return closes the app like any other TV app
+      document.addEventListener('keydown', function (e) {
+        if (e.keyCode === 10009) {
+          try { tizen.application.getCurrentApplication().exit(); } catch (err) { /* ignore */ }
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
