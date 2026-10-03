@@ -2,48 +2,48 @@
   "feeds": [
     {
       "name": "Joey",
-      "color": "#5DADE2",
+      "color": "#7f98ad",
       "url": ""
     },
     {
       "name": "Meal Plan",
-      "color": "#F5B041",
+      "color": "#d08a4a",
       "url": ""
     },
     {
       "name": "Shae",
-      "color": "#BB8FCE",
+      "color": "#a88aa6",
       "url": ""
     },
     {
       "name": "Trope",
-      "color": "#58D68D",
+      "color": "#8a9a5b",
       "url": ""
     },
     {
       "name": "Writing",
-      "color": "#F1948A",
+      "color": "#c98b8b",
       "url": ""
     },
     {
       "name": "Personal",
-      "color": "#F7DC6F",
+      "color": "#d6b25e",
       "url": ""
     },
     {
       "name": "Skiptown",
-      "color": "#EB984E",
+      "color": "#b07a54",
       "url": ""
     },
     {
       "name": "Holidays",
-      "color": "#909497",
+      "color": "#a39689",
       "url": "https://calendar.google.com/calendar/ical/en.usa%23holiday%40group.v.calendar.google.com/public/basic.ics"
     }
   ],
   "appEvents": {
     "name": "Shared",
-    "color": "#EC7063"
+    "color": "#a5524a"
   },
   "weather": {
     "lat": 35.2271,

@@ -24,25 +24,25 @@
   };
   var VIEWS = ['day', 'week', 'month'];
   // Must match the body[data-theme] blocks in wall.css
-  var THEMES = ['Midnight', 'Dusk', 'Sunrise'];
-  var PAGE_VERSION = 'v2';
+  var THEMES = ['Linen', 'Oat', 'Pumpkin Spice'];
+  var PAGE_VERSION = 'v4 cream';
 
   // Simple flat weather icons (inline SVG, no external files)
-  var SUN = '<circle cx="32" cy="32" r="11" fill="#fbbf24"/><g stroke="#fbbf24" stroke-width="4" stroke-linecap="round">' +
+  var SUN = '<circle cx="32" cy="32" r="11" fill="#d9a441"/><g stroke="#d9a441" stroke-width="4" stroke-linecap="round">' +
     '<path d="M32 6v7M32 51v7M6 32h7M51 32h7M13.6 13.6l5 5M45.4 45.4l5 5M13.6 50.4l5-5M45.4 18.6l5-5"/></g>';
   var CLOUD = function (fill) {
     return '<path d="M18 50h28a11 11 0 0 0 0-22 15 15 0 0 0-28.6 4A9 9 0 0 0 18 50z" fill="' + fill + '"/>';
   };
   var ICONS = {
     clear: SUN,
-    partly: '<g transform="translate(-6 -8) scale(0.8)">' + SUN + '</g>' + CLOUD('#cbd5e1'),
-    cloud: CLOUD('#94a3b8'),
-    fog: CLOUD('#94a3b8') + '<g stroke="#94a3b8" stroke-width="3.5" stroke-linecap="round"><path d="M12 56h40M18 61h28"/></g>',
-    rain: '<g transform="translate(0 -6)">' + CLOUD('#94a3b8') + '</g><g stroke="#3b82f6" stroke-width="3.5" stroke-linecap="round">' +
+    partly: '<g transform="translate(-6 -8) scale(0.8)">' + SUN + '</g>' + CLOUD('#cbbfb2'),
+    cloud: CLOUD('#a39689'),
+    fog: CLOUD('#a39689') + '<g stroke="#a39689" stroke-width="3.5" stroke-linecap="round"><path d="M12 56h40M18 61h28"/></g>',
+    rain: '<g transform="translate(0 -6)">' + CLOUD('#a39689') + '</g><g stroke="#7f98ad" stroke-width="3.5" stroke-linecap="round">' +
       '<path d="M22 50l-3 7M32 50l-3 7M42 50l-3 7"/></g>',
-    snow: '<g transform="translate(0 -6)">' + CLOUD('#cbd5e1') + '</g><g fill="#7dd3fc">' +
+    snow: '<g transform="translate(0 -6)">' + CLOUD('#cbbfb2') + '</g><g fill="#d8d2c8">' +
       '<circle cx="21" cy="54" r="3"/><circle cx="32" cy="58" r="3"/><circle cx="43" cy="54" r="3"/></g>',
-    storm: '<g transform="translate(0 -6)">' + CLOUD('#64748b') + '</g><path d="M34 44l-8 11h7l-3 9 10-13h-7l3-7z" fill="#facc15"/>'
+    storm: '<g transform="translate(0 -6)">' + CLOUD('#7b6f66') + '</g><path d="M34 44l-8 11h7l-3 9 10-13h-7l3-7z" fill="#e0b04f"/>'
   };
   function iconKind(code) {
     if (code <= 1) return 'clear';
