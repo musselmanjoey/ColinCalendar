@@ -1,0 +1,18 @@
+[Unit]
+Description=Wall calendar - TV wall page, TV schedule and remote control (repo: github.com/musselmanjoey/wall-calendar)
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/musselmanjoey/wall-calendar
+ExecStart=/usr/bin/node /home/musselmanjoey/wall-calendar/api/index.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+# PORT, TZ, WALL_URL, WALL_CONFIG, CONTROL_TOKEN (mode 600, not in git)
+EnvironmentFile=/home/musselmanjoey/wall-calendar/.env
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

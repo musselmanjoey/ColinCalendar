@@ -1,0 +1,169 @@
+---
+# Wall calendar on guist: the source of truth for what's installed there.
+#
+# Run from the laptop (pulls master on guist first, then runs this there):
+#   bash deploy/deploy-guist.sh
+#   bash deploy/deploy-guist.sh --tags=verify
+#
+# Or on guist itself:
+#   cd ~/wall-calendar && ~/.local/bin/ansible-playbook -i ansible/inventory.ini ansible/deploy-guist.yml
+#
+# Tags:
+#   data     data folder, wall.json (only created if missing), .env, permissions
+#   build    npm ci
+#   systemd  unit file + enable
+#   restart  restart + verify
+#   verify   service state, /wall answers, recent logs
+#
+# Never overwrites wall.json or the control token. The TV schedule fires up to
+# 5 minutes after its set time, so avoid deploying 09:55-10:06 and 22:55-23:06.
+
+- name: Deploy the wall calendar
+  hosts: local
+  vars:
+    repo_dir: /home/musselmanjoey/wall-calendar
+    data_dir: /home/musselmanjoey/wall-calendar-data
+    service_name: wall-calendar
+    port: 3020
+    wall_url: "http://192.168.1.177:{{ port }}/wall"
+    # Renamed from colin-calendar 2026-10-03; kept stopped so two copies never fight over the port
+    retired_service: colin-calendar
+
+  tasks:
+    # ── Data and settings ──────────────────────────────────────────────
+    - name: Data folder (private)
+      ansible.builtin.file:
+        path: "{{ data_dir }}"
+        state: directory
+        mode: '0700'
+      tags: [data]
+
+    - name: wall.json from the example, only if there is none
+      ansible.builtin.copy:
+        src: "{{ repo_dir }}/deploy/wall.example.json"
+        dest: "{{ data_dir }}/wall.json"
+        remote_src: true
+        force: false
+        mode: '0600'
+      tags: [data]
+
+    - name: wall.json is private (feed URLs and the TV pairing token)
+      ansible.builtin.file:
+        path: "{{ data_dir }}/wall.json"
+        mode: '0600'
+      tags: [data]
+
+    - name: README in the data folder
+      ansible.builtin.copy:
+        dest: "{{ data_dir }}/README"
+        mode: '0644'
+        content: |
+          Live settings for the wall calendar on the living-room TV.
+          Code: {{ repo_dir }} (github.com/musselmanjoey/wall-calendar); read GUIST.md there.
+          Service: systemctl --user status {{ service_name }}
+
+          wall.json  feeds (secret Google iCal URLs), colors, weather, TV ip/mac/pairing
+                     token, the TV on/off schedule. Re-read live: edits apply without a
+                     restart. Keep it mode 600. The service rewrites it when the TV hands
+                     out a new pairing token.
+      tags: [data]
+
+    - name: .env with a new control token, only if there is none
+      ansible.builtin.shell:
+        cmd: >-
+          umask 077 &&
+          printf 'CONTROL_TOKEN=%s\n'
+          "$(node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))")" > .env
+        chdir: "{{ repo_dir }}"
+        creates: "{{ repo_dir }}/.env"
+      tags: [data]
+
+    - name: .env settings
+      ansible.builtin.lineinfile:
+        path: "{{ repo_dir }}/.env"
+        regexp: "^{{ item.key }}="
+        line: "{{ item.key }}={{ item.value }}"
+        mode: '0600'
+      loop:
+        - { key: PORT, value: "{{ port }}" }
+        - { key: TZ, value: America/New_York }
+        - { key: WALL_URL, value: "{{ wall_url }}" }
+        - { key: WALL_CONFIG, value: "{{ data_dir }}/wall.json" }
+      tags: [data]
+
+    # ── Build ──────────────────────────────────────────────────────────
+    - name: Install npm dependencies
+      ansible.builtin.command:
+        cmd: npm ci --omit=dev --silent
+        chdir: "{{ repo_dir }}"
+      tags: [build]
+
+    # ── Systemd ────────────────────────────────────────────────────────
+    - name: Is the retired unit still installed?
+      ansible.builtin.stat:
+        path: "~/.config/systemd/user/{{ retired_service }}.service"
+      register: retired_unit
+      tags: [systemd]
+
+    - name: Retired unit is stopped and disabled
+      ansible.builtin.systemd:
+        name: "{{ retired_service }}"
+        state: stopped
+        enabled: false
+        scope: user
+      when: retired_unit.stat.exists
+      tags: [systemd]
+
+    - name: Install the unit file
+      ansible.builtin.copy:
+        src: "{{ repo_dir }}/deploy/{{ service_name }}.service"
+        dest: "~/.config/systemd/user/{{ service_name }}.service"
+        remote_src: true
+      tags: [systemd]
+
+    - name: Enable the service (starts on boot)
+      ansible.builtin.systemd:
+        name: "{{ service_name }}"
+        enabled: true
+        daemon_reload: true
+        scope: user
+      tags: [systemd]
+
+    - name: Restart
+      ansible.builtin.systemd:
+        name: "{{ service_name }}"
+        state: restarted
+        scope: user
+      tags: [restart, systemd, build, data]
+
+    # ── Verify ─────────────────────────────────────────────────────────
+    - name: The wall page answers
+      ansible.builtin.uri:
+        url: "http://localhost:{{ port }}/wall"
+      register: wall_page
+      retries: 10
+      delay: 2
+      until: wall_page.status == 200
+      tags: [verify, restart, systemd, build, data]
+
+    - name: Service state
+      ansible.builtin.systemd:
+        name: "{{ service_name }}"
+        scope: user
+      register: svc
+      tags: [verify, restart, systemd, build, data]
+
+    - name: Recent logs
+      ansible.builtin.command:
+        cmd: journalctl --user -u {{ service_name }} --no-pager -n 8 -o cat
+      register: logs
+      changed_when: false
+      tags: [verify, restart, systemd, build, data]
+
+    - name: Report
+      ansible.builtin.debug:
+        msg: |
+          {{ service_name }}: {{ svc.status.ActiveState }} since {{ svc.status.ActiveEnterTimestamp }}
+          Wall page: {{ wall_url }}
+          {{ logs.stdout }}
+      tags: [verify, restart, systemd, build, data]
