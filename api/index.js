@@ -183,9 +183,12 @@ app.get('/api/calendar.ics', async (req, res) => {
 const wall = require('../lib/wall');
 const tv = require('../lib/samsung-tv');
 const scheduler = require('../lib/scheduler');
+const display = require('../lib/tv-display');
 
 const PORT = process.env.PORT || 3000;
 const WALL_URL = process.env.WALL_URL || `http://localhost:${PORT}/wall`;
+// How the TV reaches this server (frames are fetched from here)
+const BASE_URL = WALL_URL.replace(/\/wall$/, '');
 
 app.get('/wall', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'wall.html'));
@@ -213,12 +216,26 @@ function requireToken(req, res, next) {
   next();
 }
 
+// The current calendar frame for the TV (DLNA image). Any frame number returns
+// the latest; the number only exists so the TV sees a new URL each refresh.
+app.get(/^\/tv\/frame-\d+\.jpg$/, (req, res) => {
+  const { jpeg } = display.currentFrame();
+  if (!jpeg) return res.status(404).end();
+  res.set({
+    'Content-Type': 'image/jpeg',
+    'Cache-Control': 'no-store',
+    'contentFeatures.dlna.org': 'DLNA.ORG_PN=JPEG_LRG;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=00D00000000000000000000000000000',
+    'transferMode.dlna.org': 'Interactive',
+  });
+  res.send(jpeg);
+});
+
 app.get('/api/tv/status', requireToken, async (req, res) => {
   try {
     const state = await tv.powerState();
     res.json({
       power: state,
-      calendarOnScreen: state === 'on' ? await tv.browserVisible() : false,
+      calendarOnScreen: state === 'on' ? await display.showingOurFrame() : false,
       lastWallView,
       schedule: wall.loadConfig().schedule,
       recentRuns: scheduler.history,
@@ -230,7 +247,7 @@ app.get('/api/tv/status', requireToken, async (req, res) => {
 
 const TV_ACTIONS = {
   pair: () => tv.pair(),
-  'calendar-on': () => tv.showApp(),
+  'calendar-on': () => tv.showCalendar(WALL_URL, BASE_URL),
   'tv-off': () => tv.turnOff(),
   'tv-off-if-calendar': () => tv.turnOffIfShowingCalendar(),
   'open-app': (req) => tv.showApp(req.query.app),
@@ -251,7 +268,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 
 if (require.main === module) {
   app.listen(PORT, () => console.log(`Running at http://localhost:${PORT}`));
-  scheduler.start(WALL_URL);
+  scheduler.start({ wallUrl: WALL_URL, baseUrl: BASE_URL });
 }
 
 module.exports = app;

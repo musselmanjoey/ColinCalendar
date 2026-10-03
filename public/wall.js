@@ -18,6 +18,8 @@
   };
 
   var data = null;
+  // ?static=1: rendered to an image for the TV (lib/tv-display.js), so no motion
+  var STATIC = /[?&]static=1/.test(location.search);
 
   function $(id) { return document.getElementById(id); }
   function pad(n) { return n < 10 ? '0' + n : String(n); }
@@ -171,11 +173,15 @@
       if (xhr.status === 200) {
         data = JSON.parse(xhr.responseText);
         renderAll();
+        window.__wallReady = true;
       } else {
         $('status').textContent = 'Server error ' + xhr.status;
       }
     };
-    xhr.onerror = function () { $('status').textContent = 'Cannot reach the calendar server'; };
+    xhr.onerror = function () {
+      $('status').textContent = 'Cannot reach the calendar server';
+      window.__wallReady = true;
+    };
     xhr.send();
   }
 
@@ -185,6 +191,12 @@
   function shift() {
     shiftIndex = (shiftIndex + 1) % shifts.length;
     $('stage').style.transform = 'translate(' + shifts[shiftIndex][0] + 'px,' + shifts[shiftIndex][1] + 'px)';
+  }
+
+  if (STATIC) {
+    renderAll();
+    load();
+    return;
   }
 
   var lastDay = new Date().getDate();
