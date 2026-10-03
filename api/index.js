@@ -191,8 +191,12 @@ app.get('/wall', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'wall.html'));
 });
 
+// Last device to load the wall page, so /api/tv/status can show the TV is really on it
+let lastWallView = null;
+
 app.get('/api/wall/data', async (req, res) => {
   try {
+    lastWallView = { at: new Date().toString(), ip: req.ip, userAgent: req.get('user-agent') };
     res.set('Cache-Control', 'no-store');
     res.json(await wall.wallData(getEvents));
   } catch (err) {
@@ -215,6 +219,7 @@ app.get('/api/tv/status', requireToken, async (req, res) => {
     res.json({
       power: state,
       calendarOnScreen: state === 'on' ? await tv.browserVisible() : false,
+      lastWallView,
       schedule: wall.loadConfig().schedule,
       recentRuns: scheduler.history,
     });
