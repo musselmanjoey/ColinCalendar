@@ -49,7 +49,7 @@
     "lat": 35.2271,
     "lon": -80.8431
   },
-  "brightness": 0.85,
+  "brightness": 1,
   "night": {
     "start": "21:30",
     "end": "06:00",

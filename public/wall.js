@@ -23,13 +23,43 @@
     82: 'Heavy showers', 85: 'Snow showers', 86: 'Snow showers', 95: 'Storms', 96: 'Storms', 99: 'Storms'
   };
   var VIEWS = ['day', 'week', 'month'];
+  // Must match the body[data-theme] blocks in wall.css
+  var THEMES = ['Midnight', 'Dusk', 'Sunrise'];
+  var PAGE_VERSION = 'v2';
+
+  // Simple flat weather icons (inline SVG, no external files)
+  var SUN = '<circle cx="32" cy="32" r="11" fill="#fbbf24"/><g stroke="#fbbf24" stroke-width="4" stroke-linecap="round">' +
+    '<path d="M32 6v7M32 51v7M6 32h7M51 32h7M13.6 13.6l5 5M45.4 45.4l5 5M13.6 50.4l5-5M45.4 18.6l5-5"/></g>';
+  var CLOUD = function (fill) {
+    return '<path d="M18 50h28a11 11 0 0 0 0-22 15 15 0 0 0-28.6 4A9 9 0 0 0 18 50z" fill="' + fill + '"/>';
+  };
+  var ICONS = {
+    clear: SUN,
+    partly: '<g transform="translate(-6 -8) scale(0.8)">' + SUN + '</g>' + CLOUD('#cbd5e1'),
+    cloud: CLOUD('#94a3b8'),
+    fog: CLOUD('#94a3b8') + '<g stroke="#94a3b8" stroke-width="3.5" stroke-linecap="round"><path d="M12 56h40M18 61h28"/></g>',
+    rain: '<g transform="translate(0 -6)">' + CLOUD('#94a3b8') + '</g><g stroke="#3b82f6" stroke-width="3.5" stroke-linecap="round">' +
+      '<path d="M22 50l-3 7M32 50l-3 7M42 50l-3 7"/></g>',
+    snow: '<g transform="translate(0 -6)">' + CLOUD('#cbd5e1') + '</g><g fill="#7dd3fc">' +
+      '<circle cx="21" cy="54" r="3"/><circle cx="32" cy="58" r="3"/><circle cx="43" cy="54" r="3"/></g>',
+    storm: '<g transform="translate(0 -6)">' + CLOUD('#64748b') + '</g><path d="M34 44l-8 11h7l-3 9 10-13h-7l3-7z" fill="#facc15"/>'
+  };
+  function iconKind(code) {
+    if (code <= 1) return 'clear';
+    if (code === 2) return 'partly';
+    if (code === 3) return 'cloud';
+    if (code === 45 || code === 48) return 'fog';
+    if (code >= 95) return 'storm';
+    if ((code >= 71 && code <= 77) || code === 85 || code === 86) return 'snow';
+    return 'rain';
+  }
+  function weatherIcon(code) {
+    return '<svg viewBox="0 0 64 64">' + ICONS[iconKind(code)] + '</svg>';
+  }
 
   var data = null;
   // ?static=1: rendered to an image for the TV (lib/tv-display.js), so no motion
   var STATIC = /[?&]static=1/.test(location.search);
-  // ?dog=N picks where the dog naps (the TV image passes a new N on each update)
-  var dogMatch = /[?&]dog=(\d+)/.exec(location.search);
-  var dogSeed = dogMatch ? +dogMatch[1] : null;
   // ?view=day|week|month pins one view (no rotation)
   var viewMatch = /[?&]view=(day|week|month)/.exec(location.search);
   var pinnedView = viewMatch ? viewMatch[1] : null;
@@ -91,12 +121,13 @@
   function renderWeather() {
     var w = data && data.weather;
     if (!w) { $('weather').innerHTML = ''; return; }
-    var html = '<div class="now">' + w.temp + '&deg;<small>' + esc(WEATHER[w.code] || '') + '</small></div><div class="days">';
+    var html = '<div class="now">' + weatherIcon(w.code) + '<span class="temp">' + w.temp + '&deg;</span>' +
+      '<span class="desc">' + esc(WEATHER[w.code] || '') + '</span></div><div class="days">';
     for (var i = 0; i < w.days.length; i++) {
       var d = w.days[i];
       html += '<div class="day"><b>' + (i === 0 ? 'Today' : DAYS[parseDay(d.date).getDay()]) + '</b>' +
-        '<span class="hi">' + d.hi + '&deg;</span> ' + d.lo + '&deg;' +
-        (d.rain >= 30 ? '<br>' + d.rain + '% rain' : '<br>&nbsp;') + '</div>';
+        weatherIcon(d.code) + '<span class="hi">' + d.hi + '&deg;</span> ' + d.lo + '&deg;' +
+        '<span class="rain">' + (d.rain >= 30 ? d.rain + '%' : '') + '</span></div>';
     }
     $('weather').innerHTML = html + '</div>';
   }
@@ -306,32 +337,19 @@
       $('view-' + VIEWS[i]).className = 'view' + (VIEWS[i] === name ? ' active' : '');
     }
     $('view-title').innerHTML = viewTitle(name);
-    placeDog();
   }
 
-  // The dog naps in a quiet spot of whichever view is showing, a new one each time
-  function placeDog() {
-    var old = document.querySelector('.dog');
-    if (old) old.parentNode.removeChild(old);
-    var seed = dogSeed !== null ? dogSeed : rotations + Math.floor(Date.now() / 3600000);
-    var spots, countSel;
-    if (view === 'month') { spots = document.querySelectorAll('#view-month .cell:not(.other)'); countSel = '.ev'; }
-    else if (view === 'week') { spots = document.querySelectorAll('#view-week .wcol'); countSel = '.witem'; }
-    else { spots = document.querySelectorAll('#view-day .timeline'); countSel = '.block'; }
-    var fewest = 99, quiet = [], i;
-    for (i = 0; i < spots.length; i++) fewest = Math.min(fewest, spots[i].querySelectorAll(countSel).length);
-    for (i = 0; i < spots.length; i++) {
-      var n = spots[i].querySelectorAll(countSel).length;
-      // Month cells only have room under two lines without covering anything
-      if (n <= fewest + 1 && (view !== 'month' || n <= 2)) quiet.push(spots[i]);
-    }
-    if (!quiet.length) return;
-    // Spread consecutive seeds across the view instead of stepping to the next spot
-    var spot = quiet[(seed * 7919) % quiet.length];
-    var dog = document.createElement('img');
-    dog.className = 'dog dog-' + view + (seed % 2 ? ' flip' : '');
-    dog.src = '/dog.png';
-    spot.appendChild(dog);
+  // A fixed theme from settings, or (while choosing) a new one every minute
+  var themeMatch = /[?&]theme=(\d+)/.exec(location.search);
+  function currentTheme() {
+    if (themeMatch) return +themeMatch[1];
+    if (data && data.theme) return +data.theme;
+    return Math.floor(Date.now() / 60000) % THEMES.length + 1;
+  }
+  function applyTheme() {
+    var t = currentTheme();
+    if (document.body.getAttribute('data-theme') !== String(t)) document.body.setAttribute('data-theme', String(t));
+    $('version').innerHTML = 'Theme <b>' + t + ' &middot; ' + THEMES[t - 1] + '</b> &nbsp;&middot;&nbsp; ' + PAGE_VERSION;
   }
 
   function renderAll() {
@@ -345,12 +363,13 @@
     renderMonth();
     renderLegend();
     if (data) document.body.style.filter = 'brightness(' + data.brightness + ')';
-    // Everything that matters except the clock, the now-line and the dog, so the
+    applyTheme();
+    // Everything that matters except the clock and the now-line, so the
     // server can skip pushing a new TV image when nothing changed
     var parts = ['date', 'weather', 'today', 'tomorrow', 'legend', 'status', 'view-' + view];
     var sig = [];
     for (var p = 0; p < parts.length; p++) sig.push($(parts[p]).innerHTML);
-    window.__wallSignature = sig.join('|') + '|' + (data ? data.brightness : '');
+    window.__wallSignature = sig.join('|') + '|' + (data ? data.brightness : '') + '|' + currentTheme();
     showView(view);
     renderNowLine();
   }
@@ -402,6 +421,7 @@
   setInterval(function () {
     renderAgenda('today', startOfToday(), true); // keeps "soon" / "past" current
     renderNowLine();
+    applyTheme();
   }, 60 * 1000);
 
   function rotate() {

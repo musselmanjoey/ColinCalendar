@@ -1,12 +1,30 @@
-/* TV wall calendar: dark, low-glare, sized in viewport units so it fills any TV. */
+/* TV wall calendar, sized in viewport units so it fills any TV.
+ * Colors come from the theme variables below; wall.js sets body[data-theme]. */
+
+/* --- Themes ---
+ * bg: page, surface: cards and today, text / muted: copy, line: grid,
+ * accent: highlights, chip: text on calendar-colored chips */
+body, body[data-theme="1"] { /* Midnight */
+  --bg: #0b0e14; --surface: #151a24; --text: #e9edf4; --muted: #8a93a6; --line: #232a38; --accent: #6ea8fe; --chip: #0b0e14;
+}
+body[data-theme="2"] { /* Dusk */
+  --bg: #1d1b4a; --surface: #2a2766; --text: #eef0ff; --muted: #a7a6d8; --line: #3b3780; --accent: #f472b6; --chip: #1d1b4a;
+}
+body[data-theme="3"] { /* Sunrise (light) */
+  --bg: #fff6ec; --surface: #ffffff; --text: #3a2817; --muted: #9a7c63; --line: #f0dcc6; --accent: #f97316; --chip: #2b1d10;
+}
+
 html, body {
   margin: 0;
   height: 100%;
-  background: #000;
-  color: #c8c8c8;
-  font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   overflow: hidden;
   cursor: none;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  transition: background 1.5s, color 1.5s;
 }
 
 #stage {
@@ -25,44 +43,52 @@ html, body {
   flex-direction: column;
   overflow: hidden;
 }
-#clock { font-size: 7.5vw; font-weight: 300; line-height: 1; color: #eee; }
-#clock .ampm { font-size: 2vw; margin-left: 0.4vw; color: #888; }
-#date { font-size: 2vw; color: #999; margin: 0.8vh 0 2.5vh; }
+#clock { font-size: 7.5vw; font-weight: 300; line-height: 1; color: var(--text); }
+#clock .ampm { font-size: 2vw; margin-left: 0.4vw; color: var(--muted); }
+#date { font-size: 2vw; color: var(--muted); margin: 0.8vh 0 2vh; }
 
-#weather { margin-bottom: 2.5vh; }
-#weather .now { font-size: 3vw; color: #ddd; }
-#weather .now small { font-size: 1.5vw; color: #888; margin-left: 0.6vw; }
-#weather .days { display: flex; justify-content: space-between; margin-top: 1vh; }
-#weather .day { text-align: center; font-size: 1.2vw; color: #888; width: 19%; }
-#weather .day b { display: block; color: #aaa; font-weight: 600; }
-#weather .day .hi { color: #ccc; }
+#weather {
+  background: var(--surface); border-radius: 1.2vw; padding: 1.4vh 1.2vw; margin-bottom: 2vh;
+}
+#weather .now { display: flex; align-items: center; }
+#weather .now svg { width: 5vw; height: 5vw; margin-right: 1vw; }
+#weather .now .temp { font-size: 4.2vw; font-weight: 300; line-height: 1; }
+#weather .now .desc { font-size: 1.6vw; color: var(--muted); margin-left: 0.9vw; }
+#weather .days { display: flex; justify-content: space-between; margin-top: 1.4vh; }
+#weather .day { text-align: center; font-size: 1.35vw; color: var(--muted); width: 19%; }
+#weather .day b { display: block; color: var(--text); font-weight: 600; }
+#weather .day svg { width: 2.8vw; height: 2.8vw; display: block; margin: 0.4vh auto; }
+#weather .day .hi { color: var(--text); font-weight: 600; }
+#weather .day .rain { display: block; font-size: 1.1vw; color: #3b82f6; min-height: 1.4vw; }
 
 .agenda h2 {
-  font-size: 1.25vw; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase;
-  color: #666; margin: 1.5vh 0 0.8vh; border-bottom: 1px solid #222; padding-bottom: 0.5vh;
+  font-size: 1.25vw; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--accent); margin: 1.2vh 0 0.8vh;
 }
 .agenda ul { list-style: none; margin: 0; padding: 0; }
 .agenda li {
-  display: flex; align-items: baseline; font-size: 1.7vw; padding: 0.45vh 0; color: #bbb;
+  display: flex; align-items: baseline; font-size: 1.7vw; padding: 0.45vh 0; color: var(--text);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.agenda li .dot { flex: none; width: 0.7vw; height: 0.7vw; border-radius: 50%; margin-right: 0.7vw; }
-.agenda li .when { flex: none; color: #888; width: 5.2vw; font-size: 1.35vw; }
+.agenda li .dot { flex: none; width: 0.8vw; height: 0.8vw; border-radius: 50%; margin-right: 0.7vw; }
+.agenda li .when { flex: none; color: var(--muted); width: 5.2vw; font-size: 1.35vw; }
 .agenda li .what { overflow: hidden; text-overflow: ellipsis; }
-.agenda li.soon { color: #fff; }
-.agenda li.soon .when { color: #e8c468; }
+.agenda li.soon .what { font-weight: 600; }
+.agenda li.soon .when { color: var(--accent); font-weight: 600; }
 .agenda li.past { opacity: 0.4; }
-.agenda li.none { color: #555; font-style: italic; }
+.agenda li.none { color: var(--muted); font-style: italic; }
 
-#legend { margin-top: auto; padding-top: 1.5vh; font-size: 1.2vw; color: #777; }
+#legend { margin-top: auto; padding-top: 1.5vh; font-size: 1.2vw; color: var(--muted); }
 #legend span { display: inline-block; margin: 0.3vh 1.1vw 0.3vh 0; }
-#legend i { display: inline-block; width: 0.7vw; height: 0.7vw; border-radius: 50%; margin-right: 0.4vw; }
-#status { font-size: 0.8vw; color: #7a4a4a; min-height: 1em; }
+#legend i { display: inline-block; width: 0.8vw; height: 0.8vw; border-radius: 50%; margin-right: 0.4vw; }
+#status { font-size: 0.9vw; color: #e5484d; min-height: 1em; }
+#version { font-size: 1.1vw; color: var(--muted); margin-top: 0.6vh; }
+#version b { color: var(--accent); }
 
 /* --- Right side: rotating views --- */
 #main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-#view-title { font-size: 2.8vw; font-weight: 300; color: #ddd; margin: 0 0 1.2vh; }
-#view-title small { font-size: 1.6vw; color: #777; margin-left: 1vw; }
+#view-title { font-size: 2.8vw; font-weight: 600; color: var(--text); margin: 0 0 1.2vh; }
+#view-title small { font-size: 1.6vw; font-weight: 400; color: var(--muted); margin-left: 1vw; }
 #views { flex: 1; position: relative; min-height: 0; }
 .view {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -70,98 +96,85 @@ html, body {
   opacity: 0; visibility: hidden; transition: opacity 1.2s, visibility 0s 1.2s;
 }
 .view.active { opacity: 1; visibility: visible; transition: opacity 1.2s; }
-body.static .view, body.static .view.active { transition: none; }
+body.static .view, body.static .view.active, body.static { transition: none; }
 
 /* Month */
 .weekdays { display: flex; }
 .weekdays div {
-  flex: 1; font-size: 1.2vw; letter-spacing: 0.12em; text-transform: uppercase;
-  color: #666; padding: 0 0 0.6vh 0.5vw;
+  flex: 1; font-size: 1.2vw; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted); padding: 0 0 0.6vh 0.5vw;
 }
-.grid { flex: 1; display: flex; flex-direction: column; border-top: 1px solid #1e1e1e; }
-.week { flex: 1; display: flex; min-height: 0; }
+.grid { flex: 1; display: flex; flex-direction: column; gap: 0.35vw; }
+.week { flex: 1; display: flex; min-height: 0; gap: 0.35vw; }
 .cell {
-  position: relative;
-  flex: 1; min-width: 0; border-right: 1px solid #1e1e1e; border-bottom: 1px solid #1e1e1e;
-  padding: 0.4vh 0.35vw; overflow: hidden; box-sizing: border-box;
+  position: relative; flex: 1; min-width: 0;
+  background: var(--surface); border-radius: 0.6vw;
+  padding: 0.4vh 0.4vw; overflow: hidden; box-sizing: border-box;
 }
-.cell:first-child { border-left: 1px solid #1e1e1e; }
-.cell.other { opacity: 0.35; }
-.cell .num { font-size: 1.4vw; color: #999; margin: 0 0 0.3vh 0.2vw; height: 2.2vw; line-height: 2.2vw; }
-.cell.today { background: #0d0d0d; }
+.cell.other { opacity: 0.4; }
+.cell .num { font-size: 1.4vw; color: var(--muted); margin: 0 0 0.3vh 0.2vw; height: 2.2vw; line-height: 2.2vw; }
+.cell.today { box-shadow: inset 0 0 0 0.18vw var(--accent); }
 .cell.today .num {
   display: inline-block; width: 2.2vw; text-align: center; border-radius: 50%;
-  background: #ddd; color: #000; font-weight: 600; margin-left: 0;
+  background: var(--accent); color: var(--bg); font-weight: 700; margin-left: 0;
 }
 .ev {
   font-size: 1.2vw; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  color: #bbb; padding: 0 0.25vw; margin-bottom: 0.15vh; border-radius: 0.25vw;
+  color: var(--text); padding: 0 0.25vw; margin-bottom: 0.15vh; border-radius: 0.25vw;
 }
-.ev .t { color: #888; margin-right: 0.25vw; }
-.ev.allday { color: #111; font-weight: 600; }
+.ev .t { color: var(--muted); margin-right: 0.25vw; }
+.ev.allday { color: var(--chip); font-weight: 600; }
 .ev .bar { display: inline-block; width: 0.3vw; height: 1.1vw; margin-right: 0.35vw; vertical-align: -0.1vw; border-radius: 0.1vw; }
-.more { font-size: 1.1vw; color: #666; padding-left: 0.3vw; }
+.more { font-size: 1.1vw; color: var(--muted); padding-left: 0.3vw; }
 
 /* Week */
 #view-week { flex-direction: row; }
 .wcol {
-  position: relative; flex: 1; min-width: 0; padding: 0 0.5vw;
-  border-left: 1px solid #1e1e1e; overflow: hidden;
+  position: relative; flex: 1; min-width: 0; padding: 0 0.6vw;
+  background: var(--surface); border-radius: 0.8vw; margin-right: 0.4vw; overflow: hidden;
 }
-.wcol:last-child { border-right: 1px solid #1e1e1e; }
-.wcol.today { background: #0d0d0d; }
-.whead { padding: 0.6vh 0 1.2vh; border-bottom: 1px solid #222; margin-bottom: 1vh; }
-.whead b { display: block; font-size: 1.75vw; font-weight: 600; color: #ddd; }
-.whead span { font-size: 1.3vw; color: #777; }
-.wcol.today .whead b { color: #fff; }
-.wcol.weekend .whead b { color: #9ab; }
+.wcol:last-child { margin-right: 0; }
+.wcol.today { box-shadow: inset 0 0 0 0.18vw var(--accent); }
+.whead { padding: 1vh 0 1vh; margin-bottom: 1vh; border-bottom: 1px solid var(--line); }
+.whead b { display: block; font-size: 1.75vw; font-weight: 700; color: var(--text); }
+.whead span { font-size: 1.3vw; color: var(--muted); }
+.wcol.today .whead b { color: var(--accent); }
 .witem {
-  font-size: 1.4vw; line-height: 1.3; color: #ccc; margin-bottom: 1.2vh;
-  padding-left: 0.5vw; border-left: 0.3vw solid #555;
+  font-size: 1.4vw; line-height: 1.3; color: var(--text); margin-bottom: 1.2vh;
+  padding-left: 0.5vw; border-left: 0.3vw solid var(--muted);
 }
-.witem .t { display: block; font-size: 1.1vw; color: #888; }
+.witem .t { display: block; font-size: 1.1vw; color: var(--muted); }
 .witem .w {
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.witem.allday { color: #111; font-weight: 600; border: 0; border-radius: 0.3vw; padding: 0.2vh 0.4vw; }
-.wfree { font-size: 1.3vw; color: #444; font-style: italic; }
+.witem.allday { color: var(--chip); font-weight: 600; border: 0; border-radius: 0.4vw; padding: 0.3vh 0.5vw; }
+.wfree { font-size: 1.3vw; color: var(--muted); font-style: italic; }
 
 /* Day */
 .allday-row { min-height: 2.6vh; margin-bottom: 1vh; }
 .chip {
-  display: inline-block; color: #111; font-weight: 600; font-size: 1.45vw;
-  padding: 0.3vh 0.7vw; border-radius: 0.3vw; margin: 0 0.5vw 0.5vh 0;
+  display: inline-block; color: var(--chip); font-weight: 600; font-size: 1.45vw;
+  padding: 0.4vh 0.8vw; border-radius: 0.5vw; margin: 0 0.5vw 0.5vh 0;
 }
-.timeline { position: relative; flex: 1; margin-left: 5.5vw; border-top: 1px solid #1a1a1a; }
-.hour { position: absolute; left: -5.5vw; right: 0; border-top: 1px solid #1a1a1a; }
-.hour span { position: absolute; left: 0; top: -0.85vw; width: 4.8vw; font-size: 1.1vw; color: #666; text-align: right; }
+.timeline { position: relative; flex: 1; margin-left: 5.5vw; border-top: 1px solid var(--line); }
+.hour { position: absolute; left: -5.5vw; right: 0; border-top: 1px solid var(--line); }
+.hour span { position: absolute; left: 0; top: -0.85vw; width: 4.8vw; font-size: 1.1vw; color: var(--muted); text-align: right; }
 .blocks { position: absolute; top: 0; left: 0.3vw; right: 0; bottom: 0; }
 .block {
   position: absolute; box-sizing: border-box; overflow: hidden;
-  border-left: 0.35vw solid; border-radius: 0.3vw; padding: 0.4vh 0.6vw;
+  border-left: 0.35vw solid; border-radius: 0.5vw; padding: 0.4vh 0.6vw;
 }
-.block b { display: block; font-size: 1.5vw; font-weight: 600; color: #eee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.block span { font-size: 1.15vw; color: #aaa; }
+.block b { display: block; font-size: 1.5vw; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.block span { font-size: 1.15vw; color: var(--muted); }
 .block.past { opacity: 0.45; }
-.nowline { position: absolute; left: -0.6vw; right: 0; height: 0; border-top: 2px solid #e8574a; z-index: 2; }
+.nowline { position: absolute; left: -0.6vw; right: 0; height: 0; border-top: 2px solid #e5484d; z-index: 2; }
 .nowline::before {
   content: ''; position: absolute; left: -0.5vw; top: -0.45vw; width: 0.8vw; height: 0.8vw;
-  border-radius: 50%; background: #e8574a;
+  border-radius: 50%; background: #e5484d;
 }
-.empty { position: absolute; top: 45%; width: 100%; text-align: center; font-size: 2vw; color: #555; }
-
-/* The dog, napping in a quiet day */
-.dog {
-  position: absolute; right: 0.4vw; bottom: 0.5vh;
-  height: 62%; max-height: 8.5vw;
-  border-radius: 50%; z-index: 3;
-}
-.dog-month { height: 42%; }
-.dog-week { height: auto; width: 80%; max-height: none; right: 10%; bottom: 1.5vh; }
-.dog-day { height: 22%; max-height: none; right: 1vw; bottom: 1vh; }
-.dog.flip { transform: scaleX(-1); }
+.empty { position: absolute; top: 45%; width: 100%; text-align: center; font-size: 2vw; color: var(--muted); }
 
 /* TV image mode (?static=1): no live clock, the date becomes the headline */
 body.static #clock { display: none; }
-body.static #date { font-size: 3vw; color: #ddd; margin-top: 0.5vh; }
-#updated { font-size: 1.05vw; color: #555; margin-top: 0.6vh; }
+body.static #date { font-size: 3vw; color: var(--text); font-weight: 600; margin-top: 0.5vh; }
+#updated { font-size: 1.05vw; color: var(--muted); margin-top: 0.6vh; }
