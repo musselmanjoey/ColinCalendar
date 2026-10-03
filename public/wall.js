@@ -20,6 +20,9 @@
   var data = null;
   // ?static=1: rendered to an image for the TV (lib/tv-display.js), so no motion
   var STATIC = /[?&]static=1/.test(location.search);
+  // ?dog=N picks where the dog naps (the TV image passes a new N on each update)
+  var dogMatch = /[?&]dog=(d+)/.exec(location.search);
+  var dogSeed = dogMatch ? +dogMatch[1] : null;
 
   function $(id) { return document.getElementById(id); }
   function pad(n) { return n < 10 ? '0' + n : String(n); }
@@ -164,6 +167,33 @@
     renderMonth();
     renderLegend();
     if (data) document.body.style.filter = 'brightness(' + data.brightness + ')';
+    // Everything that matters except the clock and the dog, so the server can
+    // skip pushing a new TV image when nothing changed
+    var parts = ['date', 'weather', 'today', 'tomorrow', 'legend', 'status', 'grid'];
+    var sig = [];
+    for (var p = 0; p < parts.length; p++) sig.push($(parts[p]).innerHTML);
+    window.__wallSignature = sig.join('|') + '|' + (data ? data.brightness : '');
+    placeDog();
+  }
+
+  // The dog naps in one of this month's quieter days, a different one each time
+  function placeDog() {
+    var old = document.querySelector('.dog');
+    if (old) old.parentNode.removeChild(old);
+    var seed = dogSeed !== null ? dogSeed : Math.floor(Date.now() / 3600000); // live page: hourly
+    var cells = document.querySelectorAll('.cell:not(.other)');
+    var fewest = 99, quiet = [], i;
+    for (i = 0; i < cells.length; i++) fewest = Math.min(fewest, cells[i].querySelectorAll('.ev').length);
+    for (i = 0; i < cells.length; i++) {
+      if (cells[i].querySelectorAll('.ev').length <= fewest + 1) quiet.push(cells[i]);
+    }
+    if (!quiet.length) return;
+    // Spread consecutive seeds across the month instead of stepping to the next cell
+    var cell = quiet[(seed * 7919) % quiet.length];
+    var dog = document.createElement('img');
+    dog.className = 'dog' + (seed % 2 ? ' flip' : '');
+    dog.src = '/dog.png';
+    cell.appendChild(dog);
   }
 
   function load() {
@@ -194,6 +224,11 @@
   }
 
   if (STATIC) {
+    // A still image: no ticking clock, so show when it was drawn instead
+    document.body.className = 'static';
+    var now = new Date();
+    $('updated').textContent = 'Updated ' + (now.getHours() % 12 || 12) + ':' + pad(now.getMinutes()) +
+      (now.getHours() < 12 ? ' AM' : ' PM');
     renderAll();
     load();
     return;

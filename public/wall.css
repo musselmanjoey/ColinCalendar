@@ -70,6 +70,7 @@ html, body {
 #grid { flex: 1; display: flex; flex-direction: column; border-top: 1px solid #1e1e1e; }
 .week { flex: 1; display: flex; min-height: 0; }
 .cell {
+  position: relative;
   flex: 1; min-width: 0; border-right: 1px solid #1e1e1e; border-bottom: 1px solid #1e1e1e;
   padding: 0.4vh 0.35vw; overflow: hidden; box-sizing: border-box;
 }
@@ -89,3 +90,16 @@ html, body {
 .ev.allday { color: #111; font-weight: 600; }
 .ev .bar { display: inline-block; width: 0.25vw; height: 0.85vw; margin-right: 0.35vw; vertical-align: -0.1vw; border-radius: 0.1vw; }
 .more { font-size: 0.85vw; color: #666; padding-left: 0.3vw; }
+
+/* The dog, napping in a quiet day */
+.dog {
+  position: absolute; right: 0.4vw; bottom: 0.5vh;
+  height: 62%; max-height: 8.5vw;
+  border-radius: 50%;
+}
+.dog.flip { transform: scaleX(-1); }
+
+/* TV image mode (?static=1): no live clock, the date becomes the headline */
+body.static #clock { display: none; }
+body.static #date { font-size: 2.6vw; color: #ddd; margin-top: 0.5vh; }
+#updated { font-size: 0.85vw; color: #555; margin-top: 0.6vh; }
