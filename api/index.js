@@ -221,13 +221,13 @@ function requireToken(req, res, next) {
 app.get(/^\/tv\/frame-\d+\.jpg$/, (req, res) => {
   const { jpeg } = display.currentFrame();
   if (!jpeg) return res.status(404).end();
-  res.set({
-    'Content-Type': 'image/jpeg',
-    'Cache-Control': 'no-store',
-    'contentFeatures.dlna.org': 'DLNA.ORG_PN=JPEG_LRG;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=00D00000000000000000000000000000',
-    'transferMode.dlna.org': 'Interactive',
-  });
-  res.send(jpeg);
+  // setHeader, not res.set: Express appends "; charset=utf-8", which the TV rejects
+  res.setHeader('Content-Type', 'image/jpeg');
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('contentFeatures.dlna.org', 'DLNA.ORG_PN=JPEG_LRG;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=00D00000000000000000000000000000');
+  res.setHeader('transferMode.dlna.org', 'Interactive');
+  res.setHeader('Content-Length', jpeg.length);
+  res.end(req.method === 'HEAD' ? undefined : jpeg);
 });
 
 app.get('/api/tv/status', requireToken, async (req, res) => {
