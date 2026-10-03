@@ -7,12 +7,9 @@ const app = express();
 app.use(express.json());
 
 // --- Storage ---
-// Uses Upstash Redis in production. Vercel's Upstash integration injects
-// KV_REST_API_URL/TOKEN; a direct Upstash setup uses UPSTASH_REDIS_REST_URL/TOKEN.
-// Otherwise, if DATA_FILE is set (self-hosted on guist), events persist to that
-// JSON file. With neither, an in-memory store is used (local dev).
+// Events persist to the JSON file at DATA_FILE (on guist). Without it, an
+// in-memory store is used (local dev).
 
-let redis;
 const DATA_FILE = process.env.DATA_FILE;
 let memoryStore = {};
 if (DATA_FILE && fs.existsSync(DATA_FILE)) {
@@ -26,33 +23,13 @@ function saveDataFile() {
   fs.renameSync(tmp, DATA_FILE);
 }
 
-function getRedis() {
-  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
-  if (url && token) {
-    if (!redis) {
-      const { Redis } = require('@upstash/redis');
-      redis = new Redis({ url, token });
-    }
-    return redis;
-  }
-  return null;
-}
-
 async function getEvents(key) {
-  const r = getRedis();
-  if (r) return (await r.get(key)) || [];
   return memoryStore[key] || [];
 }
 
 async function setEvents(key, events) {
-  const r = getRedis();
-  if (r) {
-    await r.set(key, events);
-  } else {
-    memoryStore[key] = events;
-    if (DATA_FILE) saveDataFile();
-  }
+  memoryStore[key] = events;
+  if (DATA_FILE) saveDataFile();
 }
 
 // --- Routes ---
@@ -248,10 +225,10 @@ app.get('/api/tv/status', requireToken, async (req, res) => {
 
 const TV_ACTIONS = {
   pair: () => tv.pair(),
-  'calendar-on': () => tv.showPage(WALL_URL),
+  'calendar-on': () => tv.showApp(),
   'tv-off': () => tv.turnOff(),
   'tv-off-if-calendar': () => tv.turnOffIfShowingCalendar(),
-  'open-url': (req) => tv.showPage(req.query.url),
+  'open-app': (req) => tv.showApp(req.query.app),
   key: (req) => tv.sendKey(req.query.key),
 };
 
@@ -265,9 +242,9 @@ app.get('/api/tv/:action', requireToken, async (req, res) => {
   }
 });
 
-// Local dev: serve static files and start server
+app.use(express.static(path.join(__dirname, '..', 'public')));
+
 if (require.main === module) {
-  app.use(express.static(path.join(__dirname, '..', 'public')));
   app.listen(PORT, () => console.log(`Running at http://localhost:${PORT}`));
   scheduler.start(WALL_URL);
 }
