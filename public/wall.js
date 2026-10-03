@@ -24,25 +24,27 @@
   };
   var VIEWS = ['day', 'week', 'month'];
   // Must match the body[data-theme] blocks in wall.css
-  var THEMES = ['Linen', 'Oat', 'Pumpkin Spice'];
-  var PAGE_VERSION = 'v5 top band';
+  var THEMES = ['Cafe'];
+  var PHRASES = ['coffee first', 'slow mornings', 'cozy season', 'warm little moments', 'sweater weather',
+    'hello, autumn', 'pumpkin everything', 'golden hour'];
+  var PAGE_VERSION = 'v6 cafe';
 
   // Simple flat weather icons (inline SVG, no external files)
-  var SUN = '<circle cx="32" cy="32" r="11" fill="#d9a441"/><g stroke="#d9a441" stroke-width="4" stroke-linecap="round">' +
+  var SUN = '<circle cx="32" cy="32" r="11" fill="#c98a3c"/><g stroke="#c98a3c" stroke-width="4" stroke-linecap="round">' +
     '<path d="M32 6v7M32 51v7M6 32h7M51 32h7M13.6 13.6l5 5M45.4 45.4l5 5M13.6 50.4l5-5M45.4 18.6l5-5"/></g>';
   var CLOUD = function (fill) {
     return '<path d="M18 50h28a11 11 0 0 0 0-22 15 15 0 0 0-28.6 4A9 9 0 0 0 18 50z" fill="' + fill + '"/>';
   };
   var ICONS = {
     clear: SUN,
-    partly: '<g transform="translate(-6 -8) scale(0.8)">' + SUN + '</g>' + CLOUD('#cbbfb2'),
-    cloud: CLOUD('#a39689'),
-    fog: CLOUD('#a39689') + '<g stroke="#a39689" stroke-width="3.5" stroke-linecap="round"><path d="M12 56h40M18 61h28"/></g>',
-    rain: '<g transform="translate(0 -6)">' + CLOUD('#a39689') + '</g><g stroke="#7f98ad" stroke-width="3.5" stroke-linecap="round">' +
+    partly: '<g transform="translate(-6 -8) scale(0.8)">' + SUN + '</g>' + CLOUD('#d6c4ad'),
+    cloud: CLOUD('#b09a82'),
+    fog: CLOUD('#b09a82') + '<g stroke="#b09a82" stroke-width="3.5" stroke-linecap="round"><path d="M12 56h40M18 61h28"/></g>',
+    rain: '<g transform="translate(0 -6)">' + CLOUD('#b09a82') + '</g><g stroke="#8b7a6b" stroke-width="3.5" stroke-linecap="round">' +
       '<path d="M22 50l-3 7M32 50l-3 7M42 50l-3 7"/></g>',
-    snow: '<g transform="translate(0 -6)">' + CLOUD('#cbbfb2') + '</g><g fill="#d8d2c8">' +
+    snow: '<g transform="translate(0 -6)">' + CLOUD('#d6c4ad') + '</g><g fill="#efe4d4">' +
       '<circle cx="21" cy="54" r="3"/><circle cx="32" cy="58" r="3"/><circle cx="43" cy="54" r="3"/></g>',
-    storm: '<g transform="translate(0 -6)">' + CLOUD('#7b6f66') + '</g><path d="M34 44l-8 11h7l-3 9 10-13h-7l3-7z" fill="#e0b04f"/>'
+    storm: '<g transform="translate(0 -6)">' + CLOUD('#7d6a5a') + '</g><path d="M34 44l-8 11h7l-3 9 10-13h-7l3-7z" fill="#d9a64a"/>'
   };
   function iconKind(code) {
     if (code <= 1) return 'clear';
@@ -346,6 +348,13 @@
     if (data && data.theme) return +data.theme;
     return Math.floor(Date.now() / 60000) % THEMES.length + 1;
   }
+  // A cozy phrase for the day (changes once a day, so it never forces an extra TV update)
+  function renderPhrase() {
+    var t = startOfToday();
+    var dayOfYear = Math.round((t - new Date(t.getFullYear(), 0, 1)) / 86400000);
+    $('phrase').textContent = PHRASES[dayOfYear % PHRASES.length];
+  }
+
   function applyTheme() {
     var t = currentTheme();
     if (document.body.getAttribute('data-theme') !== String(t)) document.body.setAttribute('data-theme', String(t));
@@ -362,14 +371,16 @@
     renderWeek();
     renderMonth();
     renderLegend();
-    if (data) document.body.style.filter = 'brightness(' + data.brightness + ')';
+    // Evening switches to the dark espresso palette rather than dimming (dimmed cream looks gray)
+    if (data) document.body.className = (STATIC ? 'static' : '') + (data.isNight ? ' night' : '');
     applyTheme();
+    renderPhrase();
     // Everything that matters except the clock and the now-line, so the
     // server can skip pushing a new TV image when nothing changed
     var parts = ['date', 'weather', 'today', 'tomorrow', 'legend', 'status', 'view-' + view];
     var sig = [];
     for (var p = 0; p < parts.length; p++) sig.push($(parts[p]).innerHTML);
-    window.__wallSignature = sig.join('|') + '|' + (data ? data.brightness : '') + '|' + currentTheme();
+    window.__wallSignature = sig.join('|') + '|' + (data ? data.isNight : '') + '|' + currentTheme();
     showView(view);
     renderNowLine();
   }

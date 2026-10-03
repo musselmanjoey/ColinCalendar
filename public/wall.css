@@ -4,14 +4,14 @@
 /* --- Themes ---
  * bg: page, surface: cards and today, text / muted: copy, line: grid,
  * accent: highlights, chip: text on calendar-colored chips */
-body, body[data-theme="1"] { /* Linen: cream + rust */
-  --bg: #f4eee5; --surface: #fbf8f3; --text: #3b3129; --muted: #8d7f72; --line: #e4d9cb; --accent: #a5583a; --chip: #2e2620;
+body, body[data-theme="1"] { /* Cafe: oatmeal knit, parchment cards, espresso + caramel */
+  --bg: #e4d2b8; --surface: #f6ebda; --text: #3b281c; --muted: #866650; --line: #e3cfb2;
+  --accent: #8b5a2b; --chip: #2e1f15; --dots: rgba(110, 75, 45, 0.09); --shadow: rgba(80, 50, 28, 0.16);
 }
-body[data-theme="2"] { /* Oat: oatmeal + olive */
-  --bg: #eee7d9; --surface: #f8f3ea; --text: #343226; --muted: #878169; --line: #dfd5c1; --accent: #6b7743; --chip: #2c2a20;
-}
-body[data-theme="3"] { /* Pumpkin Spice: warm tan cream + burnt orange */
-  --bg: #f2e4d1; --surface: #fbf3e8; --text: #42291b; --muted: #957560; --line: #e7d1b8; --accent: #b5622e; --chip: #33200f;
+/* Evening: the same look in dark espresso instead of a gray dimmed screen */
+body.night {
+  --bg: #221812; --surface: #31241b; --text: #ecdcc6; --muted: #a88b72; --line: #46352a;
+  --accent: #d49a5e; --chip: #221812; --dots: rgba(236, 220, 198, 0.04); --shadow: rgba(0, 0, 0, 0.35);
 }
 
 html, body {
@@ -22,6 +22,9 @@ html, body {
 }
 body {
   background: var(--bg);
+  /* faint knit-dot texture */
+  background-image: radial-gradient(var(--dots) 1px, transparent 1.2px);
+  background-size: 7px 7px;
   color: var(--text);
   font-family: "Lato", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   transition: background 1.5s, color 1.5s;
@@ -43,6 +46,7 @@ body {
 #top > * {
   background: var(--surface); border-radius: 1.2vw; padding: 1.6vh 1.3vw;
   box-sizing: border-box; overflow: hidden;
+  box-shadow: 0 0.35vw 0.9vw var(--shadow);
 }
 #clock, #date, #view-title, .whead b {
   font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif;
@@ -64,13 +68,12 @@ body {
 #weather .day b { display: block; color: var(--text); font-weight: 700; }
 #weather .day svg { width: 2.6vw; height: 2.6vw; display: block; margin: 0.4vh auto; }
 #weather .day .hi { color: var(--text); font-weight: 700; }
-#weather .day .rain { display: block; font-size: 1.05vw; color: #8aa0ad; min-height: 1.3vw; }
+#weather .day .rain { display: block; font-size: 1.05vw; color: var(--muted); min-height: 1.3vw; }
 
 .agenda { flex: 1; min-width: 0; }
-.agenda h2 {
-  font-size: 1.15vw; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
-  color: var(--accent); margin: 0 0 0.8vh;
-}
+.agenda h2, #phrase { font-family: "Dancing Script", "Brush Script MT", cursive; font-weight: 600; }
+.agenda h2 { font-size: 2.3vw; color: var(--accent); margin: -0.6vh 0 0.4vh; line-height: 1.1; }
+#phrase { font-size: 1.9vw; color: var(--accent); margin-top: 0.4vh; }
 .agenda ul { list-style: none; margin: 0; padding: 0; }
 .agenda li {
   display: flex; align-items: baseline; font-size: 1.5vw; padding: 0.35vh 0; color: var(--text);
@@ -115,7 +118,7 @@ body.static .view, body.static .view.active, body.static { transition: none; }
 .week { flex: 1; display: flex; min-height: 0; gap: 0.35vw; }
 .cell {
   position: relative; flex: 1; min-width: 0;
-  background: var(--surface); border-radius: 0.6vw;
+  background: var(--surface); border-radius: 0.6vw; box-shadow: 0 0.15vw 0.4vw var(--shadow);
   padding: 0.4vh 0.4vw; overflow: hidden; box-sizing: border-box;
 }
 .cell.other { opacity: 0.4; }
@@ -140,6 +143,7 @@ body.static .view, body.static .view.active, body.static { transition: none; }
 .wcol {
   position: relative; flex: 1; min-width: 0; padding: 0 0.6vw;
   background: var(--surface); border-radius: 0.8vw; margin-right: 0.4vw; overflow: hidden;
+  box-shadow: 0 0.3vw 0.8vw var(--shadow);
 }
 .wcol:last-child { margin-right: 0; }
 .wcol.today { box-shadow: inset 0 0 0 0.18vw var(--accent); }
