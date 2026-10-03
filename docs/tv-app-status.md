@@ -1,5 +1,13 @@
 # TV app (Tizen) — status and handoff
 
+**Status 2026-10-03: WORKING.** The Wall Calendar app (1.0.3) is installed on the TV and is
+what `calendar-on` opens; the DLNA picture push is the automatic fallback. Updates:
+`powershell -File tv-app\install.ps1` from the laptop. It signs with the `a2s` profile
+(Apps2Samsung's bundled certificate, which this TV accepts), so no Samsung login is needed.
+Gotchas learned: an iframe renders at its 300x150 default on this TV, so the app redirects
+straight to /wall; app-launch POSTs return a malformed "HTTP/..." body; `tizen install`
+fails on file names with spaces. Everything below is the history of how we got here.
+
 Goal: replace the DLNA picture push with a real app on the living-room Samsung TV
 (UN50TU7000FXZA, 2021, Tizen 6.0, 192.168.1.75) so the wall calendar is live
 (ticking clock, rotating views, no loading-screen flicker on each update).
