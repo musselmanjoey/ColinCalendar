@@ -4,13 +4,11 @@ Done 2026-10-03: renamed ColinCalendar → wall-calendar (GitHub, package, guist
 paths, memory), removed the Pi/MagicMirror plan, the add-an-event web app, `codes.md`,
 `tv-app-dist/` and dead browser code, moved guist deployment into `ansible/deploy-guist.yml`,
 added `GUIST.md`, `README.md` and `CLAUDE.md`, and deleted the laptop's Tizen leftovers.
-Cut-over verified (schedule, feeds, TV reachable); the downtime was about 12 s.
+Cut-over verified (schedule, feeds, TV reachable); the downtime was about 12 s. The
+old colin-calendar copy on guist, the Vercel project and Upstash are all gone.
 
 ## Still open
 
-- **2026-10-10 or later:** after a clean week (weekday 10:00 on, 23:00 off), delete the rollback
-  on guist: `~/colin-calendar`, `~/colin-calendar-data`,
-  `~/.config/systemd/user/colin-calendar.service`, and the "retired unit" tasks in the playbook.
 - Not chosen this round: a nightly backup of `wall.json`, and a health check through the
   game-senser Telegram alerts (`game-senser-services/scripts/health-check.cjs`).
 

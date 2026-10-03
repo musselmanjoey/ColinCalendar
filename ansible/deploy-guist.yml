@@ -26,8 +26,6 @@
     service_name: wall-calendar
     port: 3020
     wall_url: "http://192.168.1.177:{{ port }}/wall"
-    # Renamed from colin-calendar 2026-10-03; kept stopped so two copies never fight over the port
-    retired_service: colin-calendar
 
   tasks:
     # ── Data and settings ──────────────────────────────────────────────
@@ -99,21 +97,6 @@
       tags: [build]
 
     # ── Systemd ────────────────────────────────────────────────────────
-    - name: Is the retired unit still installed?
-      ansible.builtin.stat:
-        path: "~/.config/systemd/user/{{ retired_service }}.service"
-      register: retired_unit
-      tags: [systemd]
-
-    - name: Retired unit is stopped and disabled
-      ansible.builtin.systemd:
-        name: "{{ retired_service }}"
-        state: stopped
-        enabled: false
-        scope: user
-      when: retired_unit.stat.exists
-      tags: [systemd]
-
     - name: Install the unit file
       ansible.builtin.copy:
         src: "{{ repo_dir }}/deploy/{{ service_name }}.service"
