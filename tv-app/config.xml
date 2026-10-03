@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <!-- Samsung TV (Tizen) wrapper app for the wall calendar. It shows the live
      /wall page from guist full screen and keeps the screensaver off.
      guist launches it over the TV's REST API (lib/samsung-tv.js). -->
 <widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets"
-        id="http://colincalendar.local/WallCalendar" version="1.0.2" viewmodes="maximized">
+        id="http://colincalendar.local/WallCalendar" version="1.0.3" viewmodes="maximized">
     <tizen:application id="WallCal001.WallCalendar" package="WallCal001" required_version="5.0"/>
     <name>Wall Calendar</name>
     <icon src="icon.png"/>

@@ -246,7 +246,7 @@ app.get('/api/tv/status', requireToken, async (req, res) => {
     const state = await tv.powerState();
     res.json({
       power: state,
-      calendarOnScreen: state === 'on' ? await display.showingOurFrame() : false,
+      calendarOnScreen: state === 'on' ? (await tv.appVisible()) || (await display.showingOurFrame()) : false,
       lastWallView,
       schedule: wall.loadConfig().schedule,
       recentRuns: scheduler.history,

@@ -2,82 +2,24 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Wall Calendar</title>
-  <!-- Samsung TV web APIs (provided by the TV); used to keep the screensaver off -->
+  <!-- Go straight to the live calendar page on guist as the app's own page.
+       (An iframe rendered at its 300x150 default on this TV, so no iframe.)
+       The meta refresh needs no JavaScript; the script below is a backup. -->
+  <meta http-equiv="refresh" content="0;url=http://192.168.1.177:3020/wall?app=1">
   <script src="$WEBAPIS/webapis/webapis.js"></script>
   <style>
-    html, body { margin: 0; height: 100%; background: #e4d2b8; overflow: hidden; }
-    /* Pinned to the whole screen; without this the TV draws the frame at its 300x150 default */
-    iframe { position: fixed; top: 0; left: 0; border: 0; width: 100vw; height: 100vh; display: block; }
-    #offline {
-      display: none; position: absolute; top: 45%; width: 100%; text-align: center;
-      font: 32px Georgia, serif; color: #8b5a2b;
-    }
+    html, body { margin: 0; height: 100%; background: #e4d2b8; }
+    p { position: absolute; top: 45%; width: 100%; text-align: center; font: 32px Georgia, serif; color: #8b5a2b; }
   </style>
 </head>
 <body>
-  <iframe id="wall" src="http://192.168.1.177:3020/wall"></iframe>
-  <div id="offline">Waiting for the calendar server&hellip;</div>
+  <p>Opening the calendar&hellip;</p>
   <script>
-    // ES5 on purpose (older TV browser engine)
-    (function () {
-      var WALL_URL = 'http://192.168.1.177:3020/wall';
-      var frame = document.getElementById('wall');
-
-      // Backstop for older engines: size the frame to the real screen
-      function fit() {
-        frame.style.width = window.innerWidth + 'px';
-        frame.style.height = window.innerHeight + 'px';
-      }
-      window.addEventListener('resize', fit);
-      fit();
-
-      // Tell guist how big this app's window is (diagnostics)
-      function report(stage) {
-        var q = 'stage=' + stage + '&iw=' + window.innerWidth + '&ih=' + window.innerHeight +
-          '&sw=' + screen.width + '&sh=' + screen.height + '&dpr=' + (window.devicePixelRatio || 1) +
-          '&cw=' + document.documentElement.clientWidth + '&ch=' + document.documentElement.clientHeight +
-          '&fw=' + frame.offsetWidth + '&fh=' + frame.offsetHeight;
-        var r = new XMLHttpRequest();
-        r.open('GET', WALL_URL.replace('/wall', '/api/tv/report') + '?' + q, true);
-        r.send();
-      }
-      report('start');
-      setTimeout(function () { report('5s'); }, 5000);
-
-      try {
-        webapis.appcommon.setScreenSaver(webapis.appcommon.AppCommonScreenSaverState.SCREEN_SAVER_OFF);
-      } catch (e) { /* not on a TV */ }
-
-      // If guist was unreachable when the app opened, keep retrying
-      function check() {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', WALL_URL.replace('/wall', '/api/wall/data'), true);
-        xhr.timeout = 8000;
-        xhr.onload = function () {
-          document.getElementById('offline').style.display = 'none';
-          if (frame.getAttribute('data-failed')) {
-            frame.removeAttribute('data-failed');
-            frame.src = WALL_URL;
-          }
-        };
-        xhr.onerror = xhr.ontimeout = function () {
-          document.getElementById('offline').style.display = 'block';
-          frame.setAttribute('data-failed', '1');
-        };
-        xhr.send();
-      }
-      setInterval(check, 60 * 1000);
-      check();
-
-      // Back/Return closes the app like any other TV app
-      document.addEventListener('keydown', function (e) {
-        if (e.keyCode === 10009) {
-          try { tizen.application.getCurrentApplication().exit(); } catch (err) { /* ignore */ }
-        }
-      });
-    })();
+    try {
+      webapis.appcommon.setScreenSaver(webapis.appcommon.AppCommonScreenSaverState.SCREEN_SAVER_OFF);
+    } catch (e) { /* not on a TV */ }
+    location.replace('http://192.168.1.177:3020/wall?app=1');
   </script>
 </body>
 </html>
