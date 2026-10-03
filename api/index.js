@@ -269,6 +269,13 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 if (require.main === module) {
   app.listen(PORT, () => console.log(`Running at http://localhost:${PORT}`));
   scheduler.start({ wallUrl: WALL_URL, baseUrl: BASE_URL });
+  display.resumeIfShowing(WALL_URL, BASE_URL).catch((err) => console.error('resume:', err.message));
+
+  // Close headless Chrome on stop so systemd isn't left waiting on it
+  process.on('SIGTERM', async () => {
+    await display.shutdown();
+    process.exit(0);
+  });
 }
 
 module.exports = app;

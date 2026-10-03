@@ -8,6 +8,7 @@ WorkingDirectory=/home/musselmanjoey/colin-calendar
 ExecStart=/usr/bin/node /home/musselmanjoey/colin-calendar/api/index.js
 Restart=on-failure
 RestartSec=5
+TimeoutStopSec=15
 # PORT, DATA_FILE, CALENDAR_FEED_TOKEN (mode 600, not in git)
 EnvironmentFile=/home/musselmanjoey/colin-calendar/.env
 StandardOutput=journal
