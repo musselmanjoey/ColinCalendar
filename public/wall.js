@@ -387,7 +387,9 @@
 
   function load() {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', '/api/wall/data', true);
+    // Report the size we're drawn at, so the TV app's frame size can be checked from guist
+    xhr.open('GET', '/api/wall/data?w=' + window.innerWidth + '&h=' + window.innerHeight +
+      '&dpr=' + (window.devicePixelRatio || 1) + (STATIC ? '&static=1' : ''), true);
     xhr.onload = function () {
       if (xhr.status === 200) {
         data = JSON.parse(xhr.responseText);

@@ -199,7 +199,12 @@ let lastWallView = null;
 
 app.get('/api/wall/data', async (req, res) => {
   try {
-    lastWallView = { at: new Date().toString(), ip: req.ip, userAgent: req.get('user-agent') };
+    if (!req.query.static) {
+      lastWallView = {
+        at: new Date().toString(), ip: req.ip, userAgent: req.get('user-agent'),
+        size: req.query.w ? req.query.w + 'x' + req.query.h + ' @' + req.query.dpr : null,
+      };
+    }
     res.set('Cache-Control', 'no-store');
     res.json(await wall.wallData(getEvents));
   } catch (err) {
