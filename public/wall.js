@@ -1,14 +1,20 @@
 /* TV wall calendar. Written in ES5 on purpose: Samsung TV browsers can be old
- * Chromium builds, so no arrow functions, async/await, padStart, etc. */
+ * Chromium builds, so no arrow functions, async/await, padStart, etc.
+ *
+ * Three views rotate on the right: day (timeline), week (next 7 days) and
+ * month (grid). The left column (clock, weather, today/tomorrow) stays put. */
 (function () {
   'use strict';
 
-  var DATA_EVERY_MS = 5 * 60 * 1000;
+  var DATA_EVERY_MS = 60 * 1000; // the server re-reads Google every ~50 s
   var RELOAD_EVERY_MS = 6 * 60 * 60 * 1000; // picks up page changes
-  var MAX_LINES = 5;
+  var MAX_LINES = 5; // month cell
+  var MAX_WEEK_ITEMS = 9; // week column
   var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  var LONG_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
     'August', 'September', 'October', 'November', 'December'];
+  var SHORT_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   var WEATHER = {
     0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Cloudy', 45: 'Fog', 48: 'Fog',
     51: 'Drizzle', 53: 'Drizzle', 55: 'Drizzle', 56: 'Freezing drizzle', 57: 'Freezing drizzle',
@@ -16,19 +22,26 @@
     71: 'Light snow', 73: 'Snow', 75: 'Heavy snow', 77: 'Snow', 80: 'Showers', 81: 'Showers',
     82: 'Heavy showers', 85: 'Snow showers', 86: 'Snow showers', 95: 'Storms', 96: 'Storms', 99: 'Storms'
   };
+  var VIEWS = ['day', 'week', 'month'];
 
   var data = null;
   // ?static=1: rendered to an image for the TV (lib/tv-display.js), so no motion
   var STATIC = /[?&]static=1/.test(location.search);
   // ?dog=N picks where the dog naps (the TV image passes a new N on each update)
-  var dogMatch = /[?&]dog=(d+)/.exec(location.search);
+  var dogMatch = /[?&]dog=(\d+)/.exec(location.search);
   var dogSeed = dogMatch ? +dogMatch[1] : null;
+  // ?view=day|week|month pins one view (no rotation)
+  var viewMatch = /[?&]view=(day|week|month)/.exec(location.search);
+  var pinnedView = viewMatch ? viewMatch[1] : null;
+  var view = pinnedView || 'day';
+  var rotations = 0;
 
   function $(id) { return document.getElementById(id); }
   function pad(n) { return n < 10 ? '0' + n : String(n); }
   function dayKey(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
   function parseDay(s) { var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
   function addDays(d, n) { var c = new Date(d.getTime()); c.setDate(c.getDate() + n); return c; }
+  function startOfToday() { var t = new Date(); return new Date(t.getFullYear(), t.getMonth(), t.getDate()); }
   function esc(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
@@ -36,6 +49,10 @@
     var h = d.getHours(), m = d.getMinutes();
     var s = (h % 12 || 12) + (m ? ':' + pad(m) : '');
     return s + (h < 12 ? 'a' : 'p');
+  }
+  function timeRange(e) {
+    var s = new Date(e.start), en = new Date(e.end);
+    return en - s > 0 ? shortTime(s) + '–' + shortTime(en) : shortTime(s);
   }
 
   // Events touching a given local day, all-day first, then by start time
@@ -61,13 +78,14 @@
     return out;
   }
 
+  // --- Left column ---
+
   function renderClock() {
     var now = new Date();
     var h = now.getHours();
     $('clock').innerHTML = (h % 12 || 12) + ':' + pad(now.getMinutes()) +
       '<span class="ampm">' + (h < 12 ? 'AM' : 'PM') + '</span>';
-    $('date').textContent = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][now.getDay()] +
-      ', ' + MONTHS[now.getMonth()] + ' ' + now.getDate();
+    $('date').textContent = LONG_DAYS[now.getDay()] + ', ' + MONTHS[now.getMonth()] + ' ' + now.getDate();
   }
 
   function renderWeather() {
@@ -105,19 +123,144 @@
     $(listId).innerHTML = html;
   }
 
+  function renderLegend() {
+    var html = '';
+    var cals = (data && data.calendars) || [];
+    for (var i = 0; i < cals.length; i++) {
+      html += '<span><i style="background:' + esc(cals[i].color) + '"></i>' + esc(cals[i].name) + '</span>';
+    }
+    $('legend').innerHTML = html;
+    var errs = (data && data.feedErrors) || [];
+    var msg = [];
+    for (var j = 0; j < errs.length; j++) msg.push(errs[j].name + ': ' + errs[j].error);
+    $('status').textContent = msg.length ? 'Not updating - ' + msg.join('; ') : '';
+  }
+
+  // --- Day view: today's timeline ---
+
+  // Gives overlapping events side-by-side lanes: [{e, lane, lanes}]
+  function layoutLanes(events) {
+    var items = [];
+    var cluster = [], clusterEnd = 0, laneEnds = [];
+    function flush() {
+      for (var k = 0; k < cluster.length; k++) cluster[k].lanes = laneEnds.length;
+      cluster = []; laneEnds = [];
+    }
+    for (var i = 0; i < events.length; i++) {
+      var s = new Date(events[i].start).getTime();
+      var en = Math.max(new Date(events[i].end).getTime(), s + 30 * 60000);
+      if (cluster.length && s >= clusterEnd) flush();
+      var lane = 0;
+      while (lane < laneEnds.length && laneEnds[lane] > s) lane++;
+      laneEnds[lane] = en;
+      var item = { e: events[i], lane: lane, lanes: 1, s: s, en: en };
+      cluster.push(item);
+      items.push(item);
+      clusterEnd = cluster.length === 1 ? en : Math.max(clusterEnd, en);
+    }
+    flush();
+    return items;
+  }
+
+  function renderDay() {
+    var today = startOfToday();
+    var events = eventsOn(today);
+    var allDay = [], timed = [], i;
+    for (i = 0; i < events.length; i++) (events[i].allDay ? allDay : timed).push(events[i]);
+
+    var html = '<div class="allday-row">';
+    for (i = 0; i < allDay.length; i++) {
+      html += '<span class="chip" style="background:' + esc(allDay[i].color) + '">' + esc(allDay[i].title) + '</span>';
+    }
+    html += '</div>';
+
+    // Show 7 AM to 11 PM, stretched to fit anything earlier or later
+    var startH = 7, endH = 23;
+    for (i = 0; i < timed.length; i++) {
+      var s = new Date(timed[i].start), en = new Date(timed[i].end);
+      startH = Math.min(startH, s.getHours());
+      endH = Math.max(endH, en.getDate() !== s.getDate() ? 24 : en.getHours() + (en.getMinutes() ? 1 : 0));
+    }
+    var span = endH - startH;
+    var t0 = today.getTime() + startH * 3600000;
+
+    html += '<div class="timeline">';
+    for (var h = startH; h < endH; h++) {
+      html += '<div class="hour" style="top:' + ((h - startH) / span * 100) + '%"><span>' +
+        ((h % 12) || 12) + (h < 12 ? ' AM' : ' PM') + '</span></div>';
+    }
+    html += '<div class="blocks">';
+    var items = layoutLanes(timed);
+    for (i = 0; i < items.length; i++) {
+      var it = items[i];
+      var top = Math.max(0, (it.s - t0) / (span * 3600000) * 100);
+      var height = Math.max(3.2, (Math.min(it.en, t0 + span * 3600000) - Math.max(it.s, t0)) / (span * 3600000) * 100);
+      var past = new Date(it.e.end).getTime() < Date.now() ? ' past' : '';
+      html += '<div class="block' + past + '" style="top:' + top + '%;height:' + height + '%;left:' +
+        (it.lane / it.lanes * 100) + '%;width:calc(' + (100 / it.lanes) + '% - 0.4vw);border-color:' + esc(it.e.color) +
+        ';background:' + esc(it.e.color) + '22"><b>' + esc(it.e.title) + '</b><span>' + timeRange(it.e) +
+        ' &middot; ' + esc(it.e.calendar) + '</span></div>';
+    }
+    html += '</div></div>';
+    if (!events.length) html += '<div class="empty">Nothing on the calendar today</div>';
+    $('view-day').innerHTML = html;
+    dayRange = { t0: t0, span: span };
+  }
+
+  var dayRange = null;
+  // Drawn separately so it doesn't count as a content change (it moves every minute)
+  function renderNowLine() {
+    var old = document.querySelector('.nowline');
+    if (old) old.parentNode.removeChild(old);
+    if (!dayRange) return;
+    var pct = (Date.now() - dayRange.t0) / (dayRange.span * 3600000) * 100;
+    if (pct < 0 || pct > 100) return;
+    var line = document.createElement('div');
+    line.className = 'nowline';
+    line.style.top = pct + '%';
+    var tl = document.querySelector('#view-day .timeline');
+    if (tl) tl.appendChild(line);
+  }
+
+  // --- Week view: the next 7 days ---
+
+  function renderWeek() {
+    var today = startOfToday();
+    var html = '';
+    for (var d = 0; d < 7; d++) {
+      var day = addDays(today, d);
+      var label = d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : LONG_DAYS[day.getDay()];
+      html += '<div class="wcol' + (d === 0 ? ' today' : '') + (day.getDay() === 0 || day.getDay() === 6 ? ' weekend' : '') + '">' +
+        '<div class="whead"><b>' + label + '</b><span>' + SHORT_MONTHS[day.getMonth()] + ' ' + day.getDate() + '</span></div>';
+      var events = eventsOn(day);
+      var shown = events.length > MAX_WEEK_ITEMS ? MAX_WEEK_ITEMS - 1 : events.length;
+      for (var k = 0; k < shown; k++) {
+        var e = events[k];
+        if (e.allDay) {
+          html += '<div class="witem allday" style="background:' + esc(e.color) + '">' + esc(e.title) + '</div>';
+        } else {
+          html += '<div class="witem" style="border-color:' + esc(e.color) + '"><span class="t">' + timeRange(e) +
+            '</span><span class="w">' + esc(e.title) + '</span></div>';
+        }
+      }
+      if (events.length > shown) html += '<div class="more">+' + (events.length - shown) + ' more</div>';
+      if (!events.length) html += '<div class="wfree">Free</div>';
+      html += '</div>';
+    }
+    $('view-week').innerHTML = html;
+  }
+
+  // --- Month view ---
+
   function renderMonth() {
-    var today = new Date();
-    today = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    var today = startOfToday();
     var first = new Date(today.getFullYear(), today.getMonth(), 1);
     var start = addDays(first, -first.getDay());
     var weeks = Math.ceil((first.getDay() + new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()) / 7);
 
-    $('month-title').textContent = MONTHS[today.getMonth()] + ' ' + today.getFullYear();
-    var head = '';
-    for (var d = 0; d < 7; d++) head += '<div>' + DAYS[d] + '</div>';
-    $('weekdays').innerHTML = head;
-
-    var html = '';
+    var html = '<div class="weekdays">';
+    for (var d = 0; d < 7; d++) html += '<div>' + DAYS[d] + '</div>';
+    html += '</div><div class="grid">';
     for (var w = 0; w < weeks; w++) {
       html += '<div class="week">';
       for (var i = 0; i < 7; i++) {
@@ -141,59 +284,73 @@
       }
       html += '</div>';
     }
-    $('grid').innerHTML = html;
+    $('view-month').innerHTML = html + '</div>';
   }
 
-  function renderLegend() {
-    var html = '';
-    var cals = (data && data.calendars) || [];
-    for (var i = 0; i < cals.length; i++) {
-      html += '<span><i style="background:' + esc(cals[i].color) + '"></i>' + esc(cals[i].name) + '</span>';
+  // --- Switching views ---
+
+  function viewTitle(name) {
+    var today = startOfToday();
+    if (name === 'day') return 'Today';
+    if (name === 'week') {
+      var end = addDays(today, 6);
+      return 'This week <small>' + SHORT_MONTHS[today.getMonth()] + ' ' + today.getDate() + ' – ' +
+        SHORT_MONTHS[end.getMonth()] + ' ' + end.getDate() + '</small>';
     }
-    $('legend').innerHTML = html;
-    var errs = (data && data.feedErrors) || [];
-    var msg = [];
-    for (var j = 0; j < errs.length; j++) msg.push(errs[j].name + ': ' + errs[j].error);
-    $('status').textContent = msg.length ? 'Not updating - ' + msg.join('; ') : '';
+    return MONTHS[today.getMonth()] + ' ' + today.getFullYear();
+  }
+
+  function showView(name) {
+    view = name;
+    for (var i = 0; i < VIEWS.length; i++) {
+      $('view-' + VIEWS[i]).className = 'view' + (VIEWS[i] === name ? ' active' : '');
+    }
+    $('view-title').innerHTML = viewTitle(name);
+    placeDog();
+  }
+
+  // The dog naps in a quiet spot of whichever view is showing, a new one each time
+  function placeDog() {
+    var old = document.querySelector('.dog');
+    if (old) old.parentNode.removeChild(old);
+    var seed = dogSeed !== null ? dogSeed : rotations + Math.floor(Date.now() / 3600000);
+    var spots, countSel;
+    if (view === 'month') { spots = document.querySelectorAll('#view-month .cell:not(.other)'); countSel = '.ev'; }
+    else if (view === 'week') { spots = document.querySelectorAll('#view-week .wcol'); countSel = '.witem'; }
+    else { spots = document.querySelectorAll('#view-day .timeline'); countSel = '.block'; }
+    var fewest = 99, quiet = [], i;
+    for (i = 0; i < spots.length; i++) fewest = Math.min(fewest, spots[i].querySelectorAll(countSel).length);
+    for (i = 0; i < spots.length; i++) {
+      if (spots[i].querySelectorAll(countSel).length <= fewest + 1) quiet.push(spots[i]);
+    }
+    if (!quiet.length) return;
+    // Spread consecutive seeds across the view instead of stepping to the next spot
+    var spot = quiet[(seed * 7919) % quiet.length];
+    var dog = document.createElement('img');
+    dog.className = 'dog dog-' + view + (seed % 2 ? ' flip' : '');
+    dog.src = '/dog.png';
+    spot.appendChild(dog);
   }
 
   function renderAll() {
     renderClock();
     renderWeather();
-    var today = new Date();
-    today = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    var today = startOfToday();
     renderAgenda('today', today, true);
     renderAgenda('tomorrow', addDays(today, 1), false);
+    renderDay();
+    renderWeek();
     renderMonth();
     renderLegend();
     if (data) document.body.style.filter = 'brightness(' + data.brightness + ')';
-    // Everything that matters except the clock and the dog, so the server can
-    // skip pushing a new TV image when nothing changed
-    var parts = ['date', 'weather', 'today', 'tomorrow', 'legend', 'status', 'grid'];
+    // Everything that matters except the clock, the now-line and the dog, so the
+    // server can skip pushing a new TV image when nothing changed
+    var parts = ['date', 'weather', 'today', 'tomorrow', 'legend', 'status', 'view-' + view];
     var sig = [];
     for (var p = 0; p < parts.length; p++) sig.push($(parts[p]).innerHTML);
     window.__wallSignature = sig.join('|') + '|' + (data ? data.brightness : '');
-    placeDog();
-  }
-
-  // The dog naps in one of this month's quieter days, a different one each time
-  function placeDog() {
-    var old = document.querySelector('.dog');
-    if (old) old.parentNode.removeChild(old);
-    var seed = dogSeed !== null ? dogSeed : Math.floor(Date.now() / 3600000); // live page: hourly
-    var cells = document.querySelectorAll('.cell:not(.other)');
-    var fewest = 99, quiet = [], i;
-    for (i = 0; i < cells.length; i++) fewest = Math.min(fewest, cells[i].querySelectorAll('.ev').length);
-    for (i = 0; i < cells.length; i++) {
-      if (cells[i].querySelectorAll('.ev').length <= fewest + 1) quiet.push(cells[i]);
-    }
-    if (!quiet.length) return;
-    // Spread consecutive seeds across the month instead of stepping to the next cell
-    var cell = quiet[(seed * 7919) % quiet.length];
-    var dog = document.createElement('img');
-    dog.className = 'dog' + (seed % 2 ? ' flip' : '');
-    dog.src = '/dog.png';
-    cell.appendChild(dog);
+    showView(view);
+    renderNowLine();
   }
 
   function load() {
@@ -202,6 +359,7 @@
     xhr.onload = function () {
       if (xhr.status === 200) {
         data = JSON.parse(xhr.responseText);
+        if (STATIC && !pinnedView) view = data.staticView || 'week';
         renderAll();
         window.__wallReady = true;
       } else {
@@ -229,7 +387,6 @@
     var now = new Date();
     $('updated').textContent = 'Updated ' + (now.getHours() % 12 || 12) + ':' + pad(now.getMinutes()) +
       (now.getHours() < 12 ? ' AM' : ' PM');
-    renderAll();
     load();
     return;
   }
@@ -241,10 +398,19 @@
     if (new Date().getDate() !== lastDay) { lastDay = new Date().getDate(); renderAll(); }
   }, 10 * 1000);
   setInterval(function () {
-    var today = new Date();
-    today = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    renderAgenda('today', today, true); // keeps "soon" / "past" current
+    renderAgenda('today', startOfToday(), true); // keeps "soon" / "past" current
+    renderNowLine();
   }, 60 * 1000);
+
+  function rotate() {
+    if (!pinnedView) {
+      rotations++;
+      showView(VIEWS[(VIEWS.indexOf(view) + 1) % VIEWS.length]);
+    }
+    var seconds = (data && data.rotateSeconds) || 60;
+    setTimeout(rotate, seconds * 1000);
+  }
+  setTimeout(rotate, 60 * 1000);
   setInterval(load, DATA_EVERY_MS);
   setInterval(shift, 10 * 60 * 1000);
   setTimeout(function () { location.reload(); }, RELOAD_EVERY_MS);
