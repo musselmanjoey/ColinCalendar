@@ -41,19 +41,13 @@
       "url": "https://calendar.google.com/calendar/ical/en.usa%23holiday%40group.v.calendar.google.com/public/basic.ics"
     }
   ],
-  "appEvents": {
-    "name": "Shared",
-    "color": "#a5524a"
-  },
   "weather": {
     "lat": 35.2271,
     "lon": -80.8431
   },
-  "brightness": 1,
   "night": {
     "start": "21:30",
-    "end": "06:00",
-    "brightness": 0.55
+    "end": "06:00"
   },
   "tv": {
     "ip": "",
@@ -61,8 +55,8 @@
   },
   "schedule": [
     {
-      "time": "06:30",
-      "days": "daily",
+      "time": "10:00",
+      "days": "weekdays",
       "action": "calendar-on"
     },
     {
