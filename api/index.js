@@ -201,11 +201,75 @@ app.get('/api/calendar.ics', async (req, res) => {
   }
 });
 
+// --- TV wall page + TV control ---
+
+const wall = require('../lib/wall');
+const tv = require('../lib/samsung-tv');
+const scheduler = require('../lib/scheduler');
+
+const PORT = process.env.PORT || 3000;
+const WALL_URL = process.env.WALL_URL || `http://localhost:${PORT}/wall`;
+
+app.get('/wall', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'wall.html'));
+});
+
+app.get('/api/wall/data', async (req, res) => {
+  try {
+    res.set('Cache-Control', 'no-store');
+    res.json(await wall.wallData(getEvents));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load wall data' });
+  }
+});
+
+// TV control needs the same token as the feed. GET so it works from a phone
+// bookmark or shortcut: /api/tv/calendar-on?token=...
+function requireToken(req, res, next) {
+  const expected = process.env.CALENDAR_FEED_TOKEN;
+  if (expected && !tokenMatches(req.query.token, expected)) return res.status(404).send('Not found');
+  next();
+}
+
+app.get('/api/tv/status', requireToken, async (req, res) => {
+  try {
+    const state = await tv.powerState();
+    res.json({
+      power: state,
+      calendarOnScreen: state === 'on' ? await tv.browserVisible() : false,
+      schedule: wall.loadConfig().schedule,
+      recentRuns: scheduler.history,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+const TV_ACTIONS = {
+  pair: () => tv.pair(),
+  'calendar-on': () => tv.showPage(WALL_URL),
+  'tv-off': () => tv.turnOff(),
+  'tv-off-if-calendar': () => tv.turnOffIfShowingCalendar(),
+  'open-url': (req) => tv.showPage(req.query.url),
+  key: (req) => tv.sendKey(req.query.key),
+};
+
+app.get('/api/tv/:action', requireToken, async (req, res) => {
+  const action = TV_ACTIONS[req.params.action];
+  if (!action) return res.status(404).json({ error: `unknown action; try ${Object.keys(TV_ACTIONS).join(', ')}` });
+  try {
+    res.json({ ok: true, result: (await action(req)) || 'done' });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // Local dev: serve static files and start server
 if (require.main === module) {
   app.use(express.static(path.join(__dirname, '..', 'public')));
-  const port = process.env.PORT || 3000;
-  app.listen(port, () => console.log(`Running at http://localhost:${port}`));
+  app.listen(PORT, () => console.log(`Running at http://localhost:${PORT}`));
+  scheduler.start(WALL_URL);
 }
 
 module.exports = app;

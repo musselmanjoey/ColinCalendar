@@ -1,0 +1,20 @@
+{
+  "feeds": [
+    { "name": "Joey", "color": "#5DADE2", "url": "" },
+    { "name": "Meal Plan", "color": "#F5B041", "url": "" },
+    { "name": "Trope", "color": "#AF7AC5", "url": "" },
+    { "name": "Writing", "color": "#F1948A", "url": "" },
+    { "name": "Personal", "color": "#48C9B0", "url": "" },
+    { "name": "Skiptown", "color": "#EB984E", "url": "" },
+    { "name": "Holidays", "color": "#909497", "url": "https://calendar.google.com/calendar/ical/en.usa%23holiday%40group.v.calendar.google.com/public/basic.ics" }
+  ],
+  "appEvents": { "name": "Shared", "color": "#82E0AA" },
+  "weather": { "lat": 35.2271, "lon": -80.8431 },
+  "brightness": 0.85,
+  "night": { "start": "21:30", "end": "06:00", "brightness": 0.55 },
+  "tv": { "ip": "", "mac": "" },
+  "schedule": [
+    { "time": "06:30", "days": "daily", "action": "calendar-on" },
+    { "time": "23:00", "days": "daily", "action": "tv-off-if-calendar" }
+  ]
+}

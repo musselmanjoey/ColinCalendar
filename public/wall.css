@@ -1,0 +1,91 @@
+/* TV wall calendar: dark, low-glare, sized in viewport units so it fills any TV. */
+html, body {
+  margin: 0;
+  height: 100%;
+  background: #000;
+  color: #c8c8c8;
+  font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow: hidden;
+  cursor: none;
+}
+
+#stage {
+  display: flex;
+  height: 100vh;
+  padding: 2.5vh 2vw;
+  box-sizing: border-box;
+  transition: transform 2s;
+}
+
+/* --- Left column --- */
+#side {
+  width: 24vw;
+  padding-right: 2vw;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#clock { font-size: 7.5vw; font-weight: 300; line-height: 1; color: #eee; }
+#clock .ampm { font-size: 2vw; margin-left: 0.4vw; color: #888; }
+#date { font-size: 1.7vw; color: #999; margin: 0.8vh 0 2.5vh; }
+
+#weather { margin-bottom: 2.5vh; }
+#weather .now { font-size: 2.6vw; color: #ddd; }
+#weather .now small { font-size: 1.2vw; color: #888; margin-left: 0.6vw; }
+#weather .days { display: flex; justify-content: space-between; margin-top: 1vh; }
+#weather .day { text-align: center; font-size: 0.95vw; color: #888; width: 19%; }
+#weather .day b { display: block; color: #aaa; font-weight: 600; }
+#weather .day .hi { color: #ccc; }
+
+.agenda h2 {
+  font-size: 1.05vw; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase;
+  color: #666; margin: 1.5vh 0 0.8vh; border-bottom: 1px solid #222; padding-bottom: 0.5vh;
+}
+.agenda ul { list-style: none; margin: 0; padding: 0; }
+.agenda li {
+  display: flex; align-items: baseline; font-size: 1.35vw; padding: 0.45vh 0; color: #bbb;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.agenda li .dot { flex: none; width: 0.7vw; height: 0.7vw; border-radius: 50%; margin-right: 0.7vw; }
+.agenda li .when { flex: none; color: #888; width: 4.2vw; font-size: 1.1vw; }
+.agenda li .what { overflow: hidden; text-overflow: ellipsis; }
+.agenda li.soon { color: #fff; }
+.agenda li.soon .when { color: #e8c468; }
+.agenda li.past { opacity: 0.4; }
+.agenda li.none { color: #555; font-style: italic; }
+
+#legend { margin-top: auto; padding-top: 1.5vh; font-size: 0.95vw; color: #777; }
+#legend span { display: inline-block; margin: 0.3vh 1.1vw 0.3vh 0; }
+#legend i { display: inline-block; width: 0.7vw; height: 0.7vw; border-radius: 50%; margin-right: 0.4vw; }
+#status { font-size: 0.8vw; color: #7a4a4a; min-height: 1em; }
+
+/* --- Month grid --- */
+#month { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+#month-title { font-size: 2.3vw; font-weight: 300; color: #ddd; margin: 0 0 1.2vh; }
+#weekdays { display: flex; }
+#weekdays div {
+  flex: 1; font-size: 0.95vw; letter-spacing: 0.12em; text-transform: uppercase;
+  color: #666; padding: 0 0 0.6vh 0.5vw;
+}
+#grid { flex: 1; display: flex; flex-direction: column; border-top: 1px solid #1e1e1e; }
+.week { flex: 1; display: flex; min-height: 0; }
+.cell {
+  flex: 1; min-width: 0; border-right: 1px solid #1e1e1e; border-bottom: 1px solid #1e1e1e;
+  padding: 0.4vh 0.35vw; overflow: hidden; box-sizing: border-box;
+}
+.cell:first-child { border-left: 1px solid #1e1e1e; }
+.cell.other { opacity: 0.35; }
+.cell .num { font-size: 1.15vw; color: #999; margin: 0 0 0.3vh 0.2vw; height: 1.9vw; line-height: 1.9vw; }
+.cell.today { background: #0d0d0d; }
+.cell.today .num {
+  display: inline-block; width: 1.9vw; text-align: center; border-radius: 50%;
+  background: #ddd; color: #000; font-weight: 600; margin-left: 0;
+}
+.ev {
+  font-size: 0.92vw; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: #bbb; padding: 0 0.25vw; margin-bottom: 0.15vh; border-radius: 0.25vw;
+}
+.ev .t { color: #888; margin-right: 0.25vw; }
+.ev.allday { color: #111; font-weight: 600; }
+.ev .bar { display: inline-block; width: 0.25vw; height: 0.85vw; margin-right: 0.35vw; vertical-align: -0.1vw; border-radius: 0.1vw; }
+.more { font-size: 0.85vw; color: #666; padding-left: 0.3vw; }
