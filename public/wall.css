@@ -29,69 +29,73 @@ body {
 
 #stage {
   display: flex;
+  flex-direction: column;
   height: 100vh;
-  padding: 2.5vh 2vw;
+  padding: 2.5vh 2vw 1.5vh;
   box-sizing: border-box;
   transition: transform 2s;
 }
 
-/* --- Left column --- */
-#side {
-  width: 27vw;
-  padding-right: 2vw;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+/* --- Top band: time, weather, today, tomorrow --- */
+#top {
+  flex: none; height: 25vh; display: flex; gap: 1.4vw; margin-bottom: 2vh;
+}
+#top > * {
+  background: var(--surface); border-radius: 1.2vw; padding: 1.6vh 1.3vw;
+  box-sizing: border-box; overflow: hidden;
 }
 #clock, #date, #view-title, .whead b {
   font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  font-variant-numeric: lining-nums;
 }
-#clock { font-size: 7.5vw; font-weight: 500; line-height: 1; color: var(--text); }
-#clock .ampm { font-size: 2vw; margin-left: 0.4vw; color: var(--muted); }
-#date { font-size: 2vw; color: var(--muted); margin: 0.8vh 0 2vh; }
+#when { flex: 0 0 21vw; display: flex; flex-direction: column; justify-content: center; }
+#clock { font-size: 6vw; font-weight: 500; line-height: 1; color: var(--text); }
+#clock .ampm { font-size: 1.8vw; margin-left: 0.4vw; color: var(--muted); }
+#date { font-size: 2.1vw; color: var(--muted); margin-top: 0.6vh; }
+#updated { font-size: 1.05vw; color: var(--muted); margin-top: 0.8vh; }
 
-#weather {
-  background: var(--surface); border-radius: 1.2vw; padding: 1.4vh 1.2vw; margin-bottom: 2vh;
-}
-#weather .now { display: flex; align-items: center; }
-#weather .now svg { width: 5vw; height: 5vw; margin-right: 1vw; }
-#weather .now .temp { font-size: 4.4vw; font-weight: 400; line-height: 1; }
-#weather .now .desc { font-size: 1.6vw; color: var(--muted); margin-left: 0.9vw; }
-#weather .days { display: flex; justify-content: space-between; margin-top: 1.4vh; }
-#weather .day { text-align: center; font-size: 1.35vw; color: var(--muted); width: 19%; }
-#weather .day b { display: block; color: var(--text); font-weight: 600; }
-#weather .day svg { width: 2.8vw; height: 2.8vw; display: block; margin: 0.4vh auto; }
-#weather .day .hi { color: var(--text); font-weight: 600; }
-#weather .day .rain { display: block; font-size: 1.1vw; color: #8aa0ad; min-height: 1.4vw; }
+#weather { flex: 0 0 31vw; display: flex; align-items: center; gap: 1.6vw; }
+#weather .now { display: flex; flex-direction: column; align-items: center; flex: none; }
+#weather .now svg { width: 5.2vw; height: 5.2vw; }
+#weather .now .temp { font-size: 3.6vw; font-weight: 400; line-height: 1.05; }
+#weather .now .desc { font-size: 1.25vw; color: var(--muted); }
+#weather .days { flex: 1; display: flex; justify-content: space-between; }
+#weather .day { text-align: center; font-size: 1.2vw; color: var(--muted); width: 19%; }
+#weather .day b { display: block; color: var(--text); font-weight: 700; }
+#weather .day svg { width: 2.6vw; height: 2.6vw; display: block; margin: 0.4vh auto; }
+#weather .day .hi { color: var(--text); font-weight: 700; }
+#weather .day .rain { display: block; font-size: 1.05vw; color: #8aa0ad; min-height: 1.3vw; }
 
+.agenda { flex: 1; min-width: 0; }
 .agenda h2 {
-  font-size: 1.25vw; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
-  color: var(--accent); margin: 1.2vh 0 0.8vh;
+  font-size: 1.15vw; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--accent); margin: 0 0 0.8vh;
 }
 .agenda ul { list-style: none; margin: 0; padding: 0; }
 .agenda li {
-  display: flex; align-items: baseline; font-size: 1.7vw; padding: 0.45vh 0; color: var(--text);
+  display: flex; align-items: baseline; font-size: 1.5vw; padding: 0.35vh 0; color: var(--text);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.agenda li .dot { flex: none; width: 0.8vw; height: 0.8vw; border-radius: 50%; margin-right: 0.7vw; }
-.agenda li .when { flex: none; color: var(--muted); width: 5.2vw; font-size: 1.35vw; }
+.agenda li .dot { flex: none; width: 0.8vw; height: 0.8vw; border-radius: 50%; margin-right: 0.6vw; }
+.agenda li .when { flex: none; color: var(--muted); width: 4.6vw; font-size: 1.2vw; }
 .agenda li .what { overflow: hidden; text-overflow: ellipsis; }
-.agenda li.soon .what { font-weight: 600; }
-.agenda li.soon .when { color: var(--accent); font-weight: 600; }
+.agenda li.soon .what { font-weight: 700; }
+.agenda li.soon .when { color: var(--accent); font-weight: 700; }
 .agenda li.past { opacity: 0.4; }
 .agenda li.none { color: var(--muted); font-style: italic; }
 
-#legend { margin-top: auto; padding-top: 1.5vh; font-size: 1.2vw; color: var(--muted); }
-#legend span { display: inline-block; margin: 0.3vh 1.1vw 0.3vh 0; }
-#legend i { display: inline-block; width: 0.8vw; height: 0.8vw; border-radius: 50%; margin-right: 0.4vw; }
-#status { font-size: 0.9vw; color: #e5484d; min-height: 1em; }
-#version { font-size: 1.1vw; color: var(--muted); margin-top: 0.6vh; }
-#version b { color: var(--accent); }
-
-/* --- Right side: rotating views --- */
-#main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-#view-title { font-size: 3.2vw; font-weight: 600; color: var(--text); margin: 0 0 1.2vh; }
+/* --- Views, full width underneath --- */
+#main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+#main-head { display: flex; align-items: baseline; justify-content: space-between; gap: 2vw; margin-bottom: 1vh; }
+#view-title { font-size: 3vw; font-weight: 600; color: var(--text); margin: 0; white-space: nowrap; }
 #view-title small { font-size: 1.6vw; font-weight: 400; color: var(--muted); margin-left: 1vw; }
+#legend { font-size: 1.15vw; color: var(--muted); text-align: right; }
+#legend span { display: inline-block; margin: 0.2vh 0 0.2vh 1.2vw; }
+#legend i { display: inline-block; width: 0.8vw; height: 0.8vw; border-radius: 50%; margin-right: 0.4vw; }
+#foot { display: flex; justify-content: space-between; margin-top: 0.8vh; min-height: 1.4vw; }
+#status { font-size: 0.95vw; color: #a5524a; }
+#version { font-size: 0.95vw; color: var(--muted); }
+#version b { color: var(--accent); }
 #views { flex: 1; position: relative; min-height: 0; }
 .view {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -107,7 +111,7 @@ body.static .view, body.static .view.active, body.static { transition: none; }
   flex: 1; font-size: 1.2vw; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--muted); padding: 0 0 0.6vh 0.5vw;
 }
-.grid { flex: 1; display: flex; flex-direction: column; gap: 0.35vw; }
+.grid { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.35vw; }
 .week { flex: 1; display: flex; min-height: 0; gap: 0.35vw; }
 .cell {
   position: relative; flex: 1; min-width: 0;
@@ -115,14 +119,15 @@ body.static .view, body.static .view.active, body.static { transition: none; }
   padding: 0.4vh 0.4vw; overflow: hidden; box-sizing: border-box;
 }
 .cell.other { opacity: 0.4; }
-.cell .num { font-size: 1.4vw; color: var(--muted); margin: 0 0 0.3vh 0.2vw; height: 2.2vw; line-height: 2.2vw; }
+/* Day number floats top-right so three events fit under it */
+.cell .num { float: right; font-size: 1.25vw; color: var(--muted); margin: 0 0 0 0.4vw; height: 2vw; line-height: 2vw; }
 .cell.today { box-shadow: inset 0 0 0 0.18vw var(--accent); }
 .cell.today .num {
-  display: inline-block; width: 2.2vw; text-align: center; border-radius: 50%;
+  width: 2vw; text-align: center; border-radius: 50%;
   background: var(--accent); color: var(--bg); font-weight: 700; margin-left: 0;
 }
 .ev {
-  font-size: 1.2vw; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 1.1vw; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   color: var(--text); padding: 0 0.25vw; margin-bottom: 0.15vh; border-radius: 0.25vw;
 }
 .ev .t { color: var(--muted); margin-right: 0.25vw; }
@@ -179,5 +184,4 @@ body.static .view, body.static .view.active, body.static { transition: none; }
 
 /* TV image mode (?static=1): no live clock, the date becomes the headline */
 body.static #clock { display: none; }
-body.static #date { font-size: 3vw; color: var(--text); font-weight: 600; margin-top: 0.5vh; }
-#updated { font-size: 1.05vw; color: var(--muted); margin-top: 0.6vh; }
+body.static #date { font-size: 3.2vw; color: var(--text); font-weight: 600; margin-top: 0; }

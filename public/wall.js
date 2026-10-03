@@ -8,7 +8,7 @@
 
   var DATA_EVERY_MS = 60 * 1000; // the server re-reads Google every ~50 s
   var RELOAD_EVERY_MS = 6 * 60 * 60 * 1000; // picks up page changes
-  var MAX_LINES = 4; // month cell
+  var MAX_LINES = 3; // month cell
   var MAX_WEEK_ITEMS = 7; // week column
   var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   var LONG_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -25,7 +25,7 @@
   var VIEWS = ['day', 'week', 'month'];
   // Must match the body[data-theme] blocks in wall.css
   var THEMES = ['Linen', 'Oat', 'Pumpkin Spice'];
-  var PAGE_VERSION = 'v4 cream';
+  var PAGE_VERSION = 'v5 top band';
 
   // Simple flat weather icons (inline SVG, no external files)
   var SUN = '<circle cx="32" cy="32" r="11" fill="#d9a441"/><g stroke="#d9a441" stroke-width="4" stroke-linecap="round">' +
@@ -137,7 +137,7 @@
     var now = Date.now();
     if (!events.length) { $(listId).innerHTML = '<li class="none">Nothing scheduled</li>'; return; }
     var html = '';
-    for (var i = 0; i < events.length && i < 8; i++) {
+    for (var i = 0; i < events.length && i < 4; i++) {
       var e = events[i];
       var cls = '';
       var when = 'All day';
@@ -150,7 +150,7 @@
       html += '<li class="' + cls + '"><span class="dot" style="background:' + esc(e.color) + '"></span>' +
         '<span class="when">' + when + '</span><span class="what">' + esc(e.title) + '</span></li>';
     }
-    if (events.length > 8) html += '<li class="none">+' + (events.length - 8) + ' more</li>';
+    if (events.length > 4) html += '<li class="none">+' + (events.length - 4) + ' more</li>';
     $(listId).innerHTML = html;
   }
 
