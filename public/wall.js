@@ -8,8 +8,8 @@
 
   var DATA_EVERY_MS = 60 * 1000; // the server re-reads Google every ~50 s
   var RELOAD_EVERY_MS = 6 * 60 * 60 * 1000; // picks up page changes
-  var MAX_LINES = 5; // month cell
-  var MAX_WEEK_ITEMS = 9; // week column
+  var MAX_LINES = 4; // month cell
+  var MAX_WEEK_ITEMS = 7; // week column
   var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   var LONG_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
@@ -321,7 +321,9 @@
     var fewest = 99, quiet = [], i;
     for (i = 0; i < spots.length; i++) fewest = Math.min(fewest, spots[i].querySelectorAll(countSel).length);
     for (i = 0; i < spots.length; i++) {
-      if (spots[i].querySelectorAll(countSel).length <= fewest + 1) quiet.push(spots[i]);
+      var n = spots[i].querySelectorAll(countSel).length;
+      // Month cells only have room under two lines without covering anything
+      if (n <= fewest + 1 && (view !== 'month' || n <= 2)) quiet.push(spots[i]);
     }
     if (!quiet.length) return;
     // Spread consecutive seeds across the view instead of stepping to the next spot

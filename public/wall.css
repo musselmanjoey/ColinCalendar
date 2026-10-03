@@ -19,7 +19,7 @@ html, body {
 
 /* --- Left column --- */
 #side {
-  width: 24vw;
+  width: 27vw;
   padding-right: 2vw;
   display: flex;
   flex-direction: column;
@@ -27,42 +27,42 @@ html, body {
 }
 #clock { font-size: 7.5vw; font-weight: 300; line-height: 1; color: #eee; }
 #clock .ampm { font-size: 2vw; margin-left: 0.4vw; color: #888; }
-#date { font-size: 1.7vw; color: #999; margin: 0.8vh 0 2.5vh; }
+#date { font-size: 2vw; color: #999; margin: 0.8vh 0 2.5vh; }
 
 #weather { margin-bottom: 2.5vh; }
-#weather .now { font-size: 2.6vw; color: #ddd; }
-#weather .now small { font-size: 1.2vw; color: #888; margin-left: 0.6vw; }
+#weather .now { font-size: 3vw; color: #ddd; }
+#weather .now small { font-size: 1.5vw; color: #888; margin-left: 0.6vw; }
 #weather .days { display: flex; justify-content: space-between; margin-top: 1vh; }
-#weather .day { text-align: center; font-size: 0.95vw; color: #888; width: 19%; }
+#weather .day { text-align: center; font-size: 1.2vw; color: #888; width: 19%; }
 #weather .day b { display: block; color: #aaa; font-weight: 600; }
 #weather .day .hi { color: #ccc; }
 
 .agenda h2 {
-  font-size: 1.05vw; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase;
+  font-size: 1.25vw; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase;
   color: #666; margin: 1.5vh 0 0.8vh; border-bottom: 1px solid #222; padding-bottom: 0.5vh;
 }
 .agenda ul { list-style: none; margin: 0; padding: 0; }
 .agenda li {
-  display: flex; align-items: baseline; font-size: 1.35vw; padding: 0.45vh 0; color: #bbb;
+  display: flex; align-items: baseline; font-size: 1.7vw; padding: 0.45vh 0; color: #bbb;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .agenda li .dot { flex: none; width: 0.7vw; height: 0.7vw; border-radius: 50%; margin-right: 0.7vw; }
-.agenda li .when { flex: none; color: #888; width: 4.2vw; font-size: 1.1vw; }
+.agenda li .when { flex: none; color: #888; width: 5.2vw; font-size: 1.35vw; }
 .agenda li .what { overflow: hidden; text-overflow: ellipsis; }
 .agenda li.soon { color: #fff; }
 .agenda li.soon .when { color: #e8c468; }
 .agenda li.past { opacity: 0.4; }
 .agenda li.none { color: #555; font-style: italic; }
 
-#legend { margin-top: auto; padding-top: 1.5vh; font-size: 0.95vw; color: #777; }
+#legend { margin-top: auto; padding-top: 1.5vh; font-size: 1.2vw; color: #777; }
 #legend span { display: inline-block; margin: 0.3vh 1.1vw 0.3vh 0; }
 #legend i { display: inline-block; width: 0.7vw; height: 0.7vw; border-radius: 50%; margin-right: 0.4vw; }
 #status { font-size: 0.8vw; color: #7a4a4a; min-height: 1em; }
 
 /* --- Right side: rotating views --- */
 #main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-#view-title { font-size: 2.3vw; font-weight: 300; color: #ddd; margin: 0 0 1.2vh; }
-#view-title small { font-size: 1.3vw; color: #777; margin-left: 1vw; }
+#view-title { font-size: 2.8vw; font-weight: 300; color: #ddd; margin: 0 0 1.2vh; }
+#view-title small { font-size: 1.6vw; color: #777; margin-left: 1vw; }
 #views { flex: 1; position: relative; min-height: 0; }
 .view {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -75,7 +75,7 @@ body.static .view, body.static .view.active { transition: none; }
 /* Month */
 .weekdays { display: flex; }
 .weekdays div {
-  flex: 1; font-size: 0.95vw; letter-spacing: 0.12em; text-transform: uppercase;
+  flex: 1; font-size: 1.2vw; letter-spacing: 0.12em; text-transform: uppercase;
   color: #666; padding: 0 0 0.6vh 0.5vw;
 }
 .grid { flex: 1; display: flex; flex-direction: column; border-top: 1px solid #1e1e1e; }
@@ -87,20 +87,20 @@ body.static .view, body.static .view.active { transition: none; }
 }
 .cell:first-child { border-left: 1px solid #1e1e1e; }
 .cell.other { opacity: 0.35; }
-.cell .num { font-size: 1.15vw; color: #999; margin: 0 0 0.3vh 0.2vw; height: 1.9vw; line-height: 1.9vw; }
+.cell .num { font-size: 1.4vw; color: #999; margin: 0 0 0.3vh 0.2vw; height: 2.2vw; line-height: 2.2vw; }
 .cell.today { background: #0d0d0d; }
 .cell.today .num {
-  display: inline-block; width: 1.9vw; text-align: center; border-radius: 50%;
+  display: inline-block; width: 2.2vw; text-align: center; border-radius: 50%;
   background: #ddd; color: #000; font-weight: 600; margin-left: 0;
 }
 .ev {
-  font-size: 0.92vw; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 1.2vw; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   color: #bbb; padding: 0 0.25vw; margin-bottom: 0.15vh; border-radius: 0.25vw;
 }
 .ev .t { color: #888; margin-right: 0.25vw; }
 .ev.allday { color: #111; font-weight: 600; }
-.ev .bar { display: inline-block; width: 0.25vw; height: 0.85vw; margin-right: 0.35vw; vertical-align: -0.1vw; border-radius: 0.1vw; }
-.more { font-size: 0.85vw; color: #666; padding-left: 0.3vw; }
+.ev .bar { display: inline-block; width: 0.3vw; height: 1.1vw; margin-right: 0.35vw; vertical-align: -0.1vw; border-radius: 0.1vw; }
+.more { font-size: 1.1vw; color: #666; padding-left: 0.3vw; }
 
 /* Week */
 #view-week { flex-direction: row; }
@@ -111,44 +111,44 @@ body.static .view, body.static .view.active { transition: none; }
 .wcol:last-child { border-right: 1px solid #1e1e1e; }
 .wcol.today { background: #0d0d0d; }
 .whead { padding: 0.6vh 0 1.2vh; border-bottom: 1px solid #222; margin-bottom: 1vh; }
-.whead b { display: block; font-size: 1.35vw; font-weight: 600; color: #ddd; }
-.whead span { font-size: 1vw; color: #777; }
+.whead b { display: block; font-size: 1.75vw; font-weight: 600; color: #ddd; }
+.whead span { font-size: 1.3vw; color: #777; }
 .wcol.today .whead b { color: #fff; }
 .wcol.weekend .whead b { color: #9ab; }
 .witem {
-  font-size: 1.05vw; line-height: 1.3; color: #ccc; margin-bottom: 1vh;
+  font-size: 1.4vw; line-height: 1.3; color: #ccc; margin-bottom: 1.2vh;
   padding-left: 0.5vw; border-left: 0.3vw solid #555;
 }
-.witem .t { display: block; font-size: 0.85vw; color: #888; }
+.witem .t { display: block; font-size: 1.1vw; color: #888; }
 .witem .w {
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .witem.allday { color: #111; font-weight: 600; border: 0; border-radius: 0.3vw; padding: 0.2vh 0.4vw; }
-.wfree { font-size: 1vw; color: #444; font-style: italic; }
+.wfree { font-size: 1.3vw; color: #444; font-style: italic; }
 
 /* Day */
 .allday-row { min-height: 2.6vh; margin-bottom: 1vh; }
 .chip {
-  display: inline-block; color: #111; font-weight: 600; font-size: 1.1vw;
+  display: inline-block; color: #111; font-weight: 600; font-size: 1.45vw;
   padding: 0.3vh 0.7vw; border-radius: 0.3vw; margin: 0 0.5vw 0.5vh 0;
 }
 .timeline { position: relative; flex: 1; margin-left: 5.5vw; border-top: 1px solid #1a1a1a; }
 .hour { position: absolute; left: -5.5vw; right: 0; border-top: 1px solid #1a1a1a; }
-.hour span { position: absolute; left: 0; top: -0.75vw; width: 4.8vw; font-size: 0.85vw; color: #666; text-align: right; }
+.hour span { position: absolute; left: 0; top: -0.85vw; width: 4.8vw; font-size: 1.1vw; color: #666; text-align: right; }
 .blocks { position: absolute; top: 0; left: 0.3vw; right: 0; bottom: 0; }
 .block {
   position: absolute; box-sizing: border-box; overflow: hidden;
   border-left: 0.35vw solid; border-radius: 0.3vw; padding: 0.4vh 0.6vw;
 }
-.block b { display: block; font-size: 1.15vw; font-weight: 600; color: #eee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.block span { font-size: 0.9vw; color: #aaa; }
+.block b { display: block; font-size: 1.5vw; font-weight: 600; color: #eee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.block span { font-size: 1.15vw; color: #aaa; }
 .block.past { opacity: 0.45; }
 .nowline { position: absolute; left: -0.6vw; right: 0; height: 0; border-top: 2px solid #e8574a; z-index: 2; }
 .nowline::before {
   content: ''; position: absolute; left: -0.5vw; top: -0.45vw; width: 0.8vw; height: 0.8vw;
   border-radius: 50%; background: #e8574a;
 }
-.empty { position: absolute; top: 45%; width: 100%; text-align: center; font-size: 1.6vw; color: #555; }
+.empty { position: absolute; top: 45%; width: 100%; text-align: center; font-size: 2vw; color: #555; }
 
 /* The dog, napping in a quiet day */
 .dog {
@@ -156,11 +156,12 @@ body.static .view, body.static .view.active { transition: none; }
   height: 62%; max-height: 8.5vw;
   border-radius: 50%; z-index: 3;
 }
+.dog-month { height: 42%; }
 .dog-week { height: auto; width: 80%; max-height: none; right: 10%; bottom: 1.5vh; }
 .dog-day { height: 22%; max-height: none; right: 1vw; bottom: 1vh; }
 .dog.flip { transform: scaleX(-1); }
 
 /* TV image mode (?static=1): no live clock, the date becomes the headline */
 body.static #clock { display: none; }
-body.static #date { font-size: 2.6vw; color: #ddd; margin-top: 0.5vh; }
-#updated { font-size: 0.85vw; color: #555; margin-top: 0.6vh; }
+body.static #date { font-size: 3vw; color: #ddd; margin-top: 0.5vh; }
+#updated { font-size: 1.05vw; color: #555; margin-top: 0.6vh; }
