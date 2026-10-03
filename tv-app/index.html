@@ -33,6 +33,19 @@
       window.addEventListener('resize', fit);
       fit();
 
+      // Tell guist how big this app's window is (diagnostics)
+      function report(stage) {
+        var q = 'stage=' + stage + '&iw=' + window.innerWidth + '&ih=' + window.innerHeight +
+          '&sw=' + screen.width + '&sh=' + screen.height + '&dpr=' + (window.devicePixelRatio || 1) +
+          '&cw=' + document.documentElement.clientWidth + '&ch=' + document.documentElement.clientHeight +
+          '&fw=' + frame.offsetWidth + '&fh=' + frame.offsetHeight;
+        var r = new XMLHttpRequest();
+        r.open('GET', WALL_URL.replace('/wall', '/api/tv/report') + '?' + q, true);
+        r.send();
+      }
+      report('start');
+      setTimeout(function () { report('5s'); }, 5000);
+
       try {
         webapis.appcommon.setScreenSaver(webapis.appcommon.AppCommonScreenSaverState.SCREEN_SAVER_OFF);
       } catch (e) { /* not on a TV */ }

@@ -235,6 +235,12 @@ app.get(/^\/tv\/frame-\d+\.jpg$/, (req, res) => {
   res.end(req.method === 'HEAD' ? undefined : jpeg);
 });
 
+// The TV app posts its window/screen sizes here (diagnostics; shows up in the journal)
+app.get('/api/tv/report', (req, res) => {
+  console.log('tv-app report:', JSON.stringify(req.query));
+  res.json({ ok: true });
+});
+
 app.get('/api/tv/status', requireToken, async (req, res) => {
   try {
     const state = await tv.powerState();
